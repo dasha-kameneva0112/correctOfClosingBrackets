@@ -178,16 +178,44 @@ int findNextBracket (const QStringList& code, int& startLine, int& startPosition
 
 void skipOneLineComment (const QStringList& code, int& currentLine, int& currentPosition)
 {
+    /*
+     currentLine++;
+    currentPosition=0;
     QString line = code[currentLine];
-    //Делать…
-    do
+    int lastchar=line.size()-1;
+
+    while (line[lastchar]=='\\' && currentLine<code.size())
     {
         currentLine++;
         currentPosition=0;
         line = code[currentLine];
-    } while (line[line.size()-1]=='\\' && currentLine<code.size());
-    //Пока последний символ строки `\` или пока не конец кода
+        lastchar=line.size()-1;
+    }
+    */
+
+    QString line = code[currentLine];
+    if(currentLine!=code.size()-1)
+    {
+        if(line[line.size()-1]=='\\')
+        {
+            //Делать…
+            do
+            {
+                currentLine++;
+                currentPosition=0;
+                line = code[currentLine];
+            } while (line[line.size()-1]=='\\' && currentLine<code.size());
+            //Пока последний символ строки `\` или пока не конец кода
+        }
+        currentLine++;
+        currentPosition=0;
+        line = code[currentLine];
+    }
+    else
+        currentPosition=line.size();
+
 }
+
 
 
 

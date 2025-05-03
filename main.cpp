@@ -174,38 +174,52 @@ int findNextBracket (const QStringList& code, int& startLine, int& startPosition
     //Вернуть результат функции
     return bracketIsFound;
 }
+*/
 
 void skipOneLineComment (const QStringList& code, int& currentLine, int& currentPosition)
 {
+    QString line = code[currentLine];
     //Делать…
     do
     {
-        //Перейти на следующую строку (startLine+1, startPosition=0)
-    } while ();
+        currentLine++;
+        currentPosition=0;
+        line = code[currentLine];
+    } while (line[line.size()-1]=='\\' && currentLine<code.size());
     //Пока последний символ строки `\` или пока не конец кода
 }
 
+
+
 bool skipMultilineComment (const QStringList& code, int& currentLine, int& currentPosition)
 {
-    int resultOfSkipping=1;
-    //Идти посимвольно по строке currentLine, начиная с currentPosition, пока не нашли
-    // конец комментария или пока не конец кода...
-    for(currentPosition; )
+    bool resultOfSkipping=0; // 1 - успешно
+    QString line = code[currentLine];
+    currentPosition++; // начинаем после *
+
+    //Идти по строке, пока не нашли конец комментария или пока не конец кода...
+    for(currentPosition; resultOfSkipping!=1 && currentPosition<line.size(); currentPosition++)
     {
-        //Если встретили «*\/», то…
-        if()
-            resultOfSkipping=0; //Нашли конец многострочного комментария
+        //Если встретили «*/», то…
+        if(line[currentPosition]=='/' && currentPosition != 0)
+            if(line[currentPosition-1]=='*')
+                resultOfSkipping=1; //Нашли конец
+
         //Если конец строки и строка не последняя, то...
-        if()
+        if(currentPosition == line.size()-1)
         {
-            //currentLine+1, currentPosition=0
+            if(currentLine != code.size()-1)
+            {
+                currentPosition=-1;
+                currentLine++;
+                line = code[currentLine];
+            }
         }
     }
 
     //Вернуть результат проверки (нашли конец комментария или нет)
     return resultOfSkipping;
 }
-*/
 
 bool skipCharConstant (const QStringList& code, int& currentLine, int& currentPosition)
 {
@@ -214,12 +228,18 @@ bool skipCharConstant (const QStringList& code, int& currentLine, int& currentPo
     bool slashesFlag = 0;
     currentPosition++; // начинаем после открывающей кавычки
 
-    //Идти посимвольно по строке, пока не нашли конец константы или пока не конец строки...
+    //Идти по строке, пока не нашли конец константы или пока не конец строки...
     for(currentPosition; resultOfSkipping!=1 && currentPosition<line.size(); currentPosition++)
     {
         //Если встретили `\`, то...
         if(line[currentPosition]=='\\')
-            slashesFlag = 1;
+        {
+            if(slashesFlag==0)
+                slashesFlag = 1;
+            else
+                slashesFlag = 0;
+        }
+
         //Если встретили ` ‘ `, то...
         if(line[currentPosition]=='\'')
         {
@@ -227,6 +247,8 @@ bool skipCharConstant (const QStringList& code, int& currentLine, int& currentPo
             if(slashesFlag==0)
                 resultOfSkipping=1; //Нашли конец константы
             //Иначе oбнулить флаг нахождения слэша
+            else
+                slashesFlag=0;
         }
     }
 

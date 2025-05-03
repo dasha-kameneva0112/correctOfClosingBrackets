@@ -4,6 +4,7 @@
 #include "errorininputdata.h"
 #include <QSet>
 #include <QStack>
+#include <qDebug>
 
 enum ErrorsInInputDataType {
     NoAccessToInputFile,
@@ -16,11 +17,11 @@ enum ErrorsInInputDataType {
     ExceedingMaxLengthInputFile
 };
 
-enum BracketType{
+typedef enum {
     Round,
     Square,
     Curly
-};
+}BracketType;
 enum BracketSide{
     Opening,
     Closing
@@ -60,6 +61,7 @@ int main(int argc, char *argv[])
 
         //Проверить корректность использования всех скобок в исходном коде(с помощью функции findAllIncorrectUsesOfBrackets)
         countOfMistakes = findAllIncorrectUsesOfBrackets();
+
     }
 
     if(errors.isEmpty())
@@ -78,7 +80,7 @@ int main(int argc, char *argv[])
     //Вернуть успешность завершения функции
     return 0;
 }
-
+/*
 int readCppFile (const QString& filePath, QStringList& code, QSet <errorininputdata>& errors)
 {
     //Открыть указанный входной файл
@@ -190,7 +192,7 @@ bool skipMultilineComment (const QStringList& code, int& currentLine, int& curre
     // конец комментария или пока не конец кода...
     for(currentPosition; )
     {
-        //Если встретили «*/», то…
+        //Если встретили «*\/», то…
         if()
             resultOfSkipping=0; //Нашли конец многострочного комментария
         //Если конец строки и строка не последняя, то...
@@ -203,21 +205,29 @@ bool skipMultilineComment (const QStringList& code, int& currentLine, int& curre
     //Вернуть результат проверки (нашли конец комментария или нет)
     return resultOfSkipping;
 }
+*/
 
 bool skipCharConstant (const QStringList& code, int& currentLine, int& currentPosition)
 {
-    int resultOfSkipping=1;
-    //Идти посимвольно по строке currentLine, начиная с currentPosition, пока не нашли
-    //конец константы или пока не конец строки...
-    for()
+    bool resultOfSkipping=0; // 1 - успешно
+    QString line = code[currentLine];
+    bool slashesFlag = 0;
+    currentPosition++; // начинаем после открывающей кавычки
+
+    //Идти посимвольно по строке, пока не нашли конец константы или пока не конец строки...
+    for(currentPosition; resultOfSkipping!=1 && currentPosition<line.size(); currentPosition++)
     {
         //Если встретили `\`, то...
-            //Изменить флаг нахождения слэша
+        if(line[currentPosition]=='\\')
+            slashesFlag = 1;
         //Если встретили ` ‘ `, то...
-            //Если слэш не был найден (флаг=0), то...
-                //Нашли конец константы
-            //Иначе...
-                //Обнулить флаг нахождения слэша
+        if(line[currentPosition]=='\'')
+        {
+            //Если слэш не был найден, то...
+            if(slashesFlag==0)
+                resultOfSkipping=1; //Нашли конец константы
+            //Иначе oбнулить флаг нахождения слэша
+        }
     }
 
     //Вернуть результат функции (успешность нахождения конца константы)
@@ -226,89 +236,145 @@ bool skipCharConstant (const QStringList& code, int& currentLine, int& currentPo
 
 bool skipStringConstant (const QStringList& code, int& currentLine, int& currentPosition)
 {
-    int resultOfSkipping=1;
-    // Идти посимвольно по строке currentLine, начиная с currentPosition, пока не нашли конец константы или пока не конец строки...
-    for()
+    bool resultOfSkipping=0; // 1 - успешно
+    QString line = code[currentLine];
+    int slashesCount=0;
+    currentPosition++; // начинаем после открывающей кавычки
+
+    // Идти посимвольно по строке, пока не нашли конец константы или пока не конец строки...
+    for(currentPosition; resultOfSkipping!=1 && currentPosition<line.size(); currentPosition++)
     {
         //Если встретили не `\` и не ` " `, то...
-            //Обнулить количество слэшей
+        if(line[currentPosition]!='\\' && line[currentPosition]!='"')
+            slashesCount=0; //Обнулить количество слэшей
+
         //Если встретили `\`, то…
-            //Увеличить количество слэшей на 1
+        if(line[currentPosition]=='\\')
+            slashesCount++; //Увеличить количество слэшей на 1
         //Если встретили ` " ` и количество слэшей не равно 0, то…
+        if(line[currentPosition]=='"')
+        {
             //Если количество слэшев четное, то…
-                //Константа пропущена
-                resultOfSkipping=0;
-            //Иначе…
-                //Константа не пропущена
-                resultOfSkipping=1;
-
+            if(slashesCount%2==0)
+                resultOfSkipping = 1; //Константа пропущена
+            //Иначе константа не пропущена
+        }
         //Если дошли до последнего символа строки, то…
+        if(currentPosition == line.size()-1)
+        {
             //Если количество слэшей нечетное…
-                //Перейти на начало следующей строки (currentPosition=0, currentLine+1)
-            //Иначе…
-                //Константа не пропущена
-                resultOfSkipping=1;
+            if(slashesCount%2!=0)
+            { //Перейти на начало следующей строки
+                if(currentLine!=code.size()-1)
+                {
+                    currentPosition=0;
+                    currentLine++;
+                    line = code[currentLine];
+                }
+                else
+                    resultOfSkipping=1;
+            }
+        }
     }
-
     //Вернуть результат пропуска константы (нашли конец или нет)
     return resultOfSkipping;
+
+    // **если конец не нашли, то currentPosition на 1 больше последнего индекса, а если нашли - на ;
 }
 
 int updateContainerOfBrackets (bracket& newBracket, QStack <bracket>& brackets, QSet<mistake>& mistakes)
 {
     int countOfMistakes=0;
+    int indexOfCouple=0;
+    bracket coupleBracket;
+    bool order=1; //0 - верный
+    bracket lastBracket;
+    QStack<bracket>::iterator it=brackets.end();;
+    int index=0;
+
     //Если найденная скобка – открывающая, то…
-    if(newBracket.side==Opening)
+    if(newBracket.side == Opening)
+        brackets.push(newBracket);    //Добавить объект в контейнер
+    if(newBracket.side == Closing)
     {
-        //Добавить объект скобки в контейнер со скобками (brackets)
-    }
-    if(newBracket.side==Closing)
-    {
-        //Найти в стеке парную открывающую скобку для текущей (findCoupleForBracket)
-        //Если пара найдена, то...
-        if()
+        //Найти в стеке парную открывающую скобку для текущей
+        indexOfCouple = findCoupleForBracket(newBracket, brackets);
+
+        if(indexOfCouple!=-1)   //Если пара найдена, то...
         {
-            //Проверить порядок найденной скобки и последней из стека (порядок
-            //верный, если последняя – того же типа, открывающая)
-            //Если порядок неверный, то...
-                //Изменить поле правильности порядка у последней в стеке (correctOfOrder = false)
-            //Если у парной открывающей скобки из стека порядок неверный, то...
-                //Создать новый объект ошибки (с помощью конструктора
-                // класса Mistake, передав тип ошибки – IncorrectOrderOfBrackets)
-                // и добавить ее в контейнер с ошибками (mistakes)
-            //Удалить из контейнера со всеми скобками (brackets) найденную парную скобку для текущей
+            //Проверить порядок скобки и последней из стека (последняя – того же типа, открывающая)
+            lastBracket = brackets.top();
+            if(lastBracket.type==newBracket.type && lastBracket.side==Opening)
+                order = 0;
+            if(order==1) //Если порядок неверный, то...
+            {
+                //Изменить поле correctOfOrder у всех скобок до парной
+                index=brackets.size()-1;
+                while(index!=indexOfCouple)
+                {
+                    index--;
+                    --it;
+                    (*it).correctOfOrder = false;
+                }
+            }
+            --it;
+            coupleBracket = *it;
+
+            if(coupleBracket.correctOfOrder!=true) //Если у парной порядок неверный, то...
+            {
+                //Создать новую ошибку (тип – IncorrectOrderOfBrackets)
+                mistake newMistake(newBracket, mistake::IncorrectOrderOfBrackets);
+                //Добавить ее в контейнер с ошибками (mistakes)
+                mistakes.insert(newMistake);
+                countOfMistakes++;
+            }
+            //Удалить из brackets найденную парную скобку для текущей
+            brackets.removeAt(indexOfCouple);
         }
         else
         {
-            //Создать новый объект ошибки (с помощью конструктора класса
-            // Mistake, передав тип ошибки – ExcessiveClosingBracket) и добавить
-            // его в контейнер с ошибками (mistakes)
+            // Если пары нет, то создать ошибку (ExcessiveClosingBracket) и добавить в mistakes
+            mistakes.insert(mistake(newBracket, mistake::ExcessiveClosingBracket));
+            countOfMistakes++;
         }
     }
 
-    //Вернуть количество выявленных ошибок (countOfMistakes)
-    return countOfMistakes=0;
+    //Вернуть количество выявленных ошибок
+    return countOfMistakes;
 }
 
-int findCoupleForBracket(bracket& newBracket, QStack<bracket>& brackets)
+int findCoupleForBracket(const bracket& newBracket, const QStack<bracket>& brackets)
 {
-    //Найти в контейнере скобок, начиная с конца, открывающую скобку того же типа, что и текущая скобка
-    //Вернуть индекс найденной парной открывающей скобки (или -1 – если нет пары)
-
-    //по контейнеру с помощью STL
-    QStack<bracket>::iterator i=brackets.begin();
+    bracket::BracketType necessaryType = newBracket.type; //определили нужный тип
+    int index=brackets.size();
     int result=0;
-    while (i!=brackets.end() || (*i).type!=newBracket.type)
-    {
-        i++;
-        result++;
-    }
-    if(i==brackets.end())
-        result=-1;
+    //QList<bracket> bracketList = brackets.toList(); //из стека в лист
+    //QList<bracket>::iterator i;
+    //for(i=bracketList.end()-1; i!=brackets.begin() || result!=1; --i)
 
-    return result;
+    //Найти в brackets, начиная с конца, открывающую скобку нужного типа
+    QStack<bracket>::const_iterator it=brackets.constEnd();
+    if (brackets.isEmpty())
+        index=-1;
+    else
+    {
+        while(it != brackets.constBegin() && result!=1)
+        {
+            --it;
+            index--;
+            if((*it).type == necessaryType)
+                if((*it).side == Opening)
+                    result=1;
+        }
+        if(it==brackets.constBegin() && (*it).type!=necessaryType) //проверка первого
+            index=-1;
+    }
+
+    //Вернуть индекс найденной парной открывающей скобки (или -1 – если нет пары)
+    return index;
 }
 
+/*
 int generateOutputTxtFile (const QString& filePath, int countOfMistakes, QSet<mistake>& mistakes, QSet<errorininputdata>& errors)
 {
     //Если расширение выходного файла неверное (не .txt), то…
@@ -349,3 +415,4 @@ int generateOutputTxtFile (const QString& filePath, int countOfMistakes, QSet<mi
     //Вернуть успешность завершения функции
     return 0;
 }
+*/

@@ -3,7 +3,8 @@
 mistake::mistake() {}
 
 
-mistake::mistake (bracket foundBracket, MistakeWithBracketsType type)
+mistake::mistake (bracket foundBracket, MistakeWithBracketsType currentType)
 {
-
+    type = currentType;
+    bracketWithMistake = foundBracket;
 }

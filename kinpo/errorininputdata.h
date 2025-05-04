@@ -23,7 +23,8 @@ public:
     int numberOfLine;
     int positionOfError;
 
-    errorininputdata(ErrorsInInputDataType type, int indexOfLineWithError, int position);
+    errorininputdata(ErrorsInInputDataType currentType);
+    errorininputdata(ErrorsInInputDataType currentType, int indexOfLineWithError, int position);
 
 };
 

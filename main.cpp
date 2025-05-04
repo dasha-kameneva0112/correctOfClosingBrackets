@@ -135,46 +135,78 @@ int findAllIncorrectUsesOfBrackets (const QStringList& code, QSet<mistake>& mist
     //Вернуть количество ошибок в контейнер с ошибками mistakes
     return countOfMistakes;
 }
+*/
 
 int findNextBracket (const QStringList& code, int& startLine, int& startPosition, QSet <errorininputdata>& errors)
 {
-    int bracketIsFound=0;
-    //Идти по строке, начиная с startPosition и startLine, пока не нашли скобку или пока
-    //не нашли ошибку ErrorInInputData в коде или пока не конец кода…
-    for(startPosition; bracketIsFound!=1 || errors.isEmpty() || (startLine!=code.size() && startPosition!=...); startPosition++)
+    int bracketIsFound=0; //1 - нашли; 0 - не нашли; -1 - ошибка кода
+    QString line = code[startLine];
+    int resultOfSkipping=-1;
+
+    //Идти по строке, пока не нашли скобку или ErrorInInputData или пока не конец кода…
+    for(startPosition; bracketIsFound!=1 && errors.isEmpty() && startPosition < line.size(); startPosition++)
     {
-        //Если встретили однострочный комментарий («//»), то пропустить его (skipOneLineComment)
-        //Если встретили многострочный комментарий («/*»), то пропустить его (skipMultilineComment)
+        //Если встретили одно- или многострочный коммент
+        if(line[startPosition]=='/' && startPosition!=line.size()-1)
+        {
+            if(line[startPosition++]=='/')
+                skipOneLineComment(code, startLine, startPosition);
+            if(line[startPosition++]=='*')
+            {
+                resultOfSkipping = skipMultilineComment(code, startLine, startPosition);
+                if(resultOfSkipping==0)
+                {
+                    bracketIsFound = -1;
+                    errorininputdata newError(UnclosedMultilineComment, startLine, startPosition);
+                    errors.insert(newError);
+                }
+            }
+        }
+
         //Если встретили символьную константу («`»), пропустить ее (skipCharConstant)
+        if(line[startPosition]=='\'')
+        {
+            resultOfSkipping = skipCharConstant(code, startLine, startPosition);
+            if(resultOfSkipping==0)
+            {
+                bracketIsFound = -1;
+                errorininputdata newError(UnclosedCharConst, startLine, startPosition);
+                errors.insert(newError);
+            }
+        }
+
         //Если встретили строковую константу («"»), пропустить ее (skipStringConstant)
+        if(line[startPosition]=='\"')
+        {
+            resultOfSkipping = skipStringConstant(code, startLine, startPosition);
+            if(resultOfSkipping==0)
+            {
+                bracketIsFound = -1;
+                errorininputdata newError(UnclosedStringConst, startLine, startPosition);
+                errors.insert(newError);
+            }
+        }
 
         //Если встретили скобку любого типа, то...
-        if()
-        {
-            //Изменить признак нахождения скобки
+        if(line[startPosition]=='(' || line[startPosition]==')' || line[startPosition]=='[' || line[startPosition]==']' || line[startPosition]=='{' || line[startPosition]=='}')
             bracketIsFound = 1;
-        }
 
-        //Если пропуск константы/многострочного комментария не прошел успешно, то…
-        if()
-        {
-            //Найдена ошибка ErrorInInputData в коде
-            bracketIsFound = -1;
-            //Создать новый объект ошибки, передав тип ошибки –
-            //UnclosedMultilineComment / UnclosedCharConst / UnclosedStringConst,
-            //    и добавить его в контейнер errors
-        }
         //Если строка закончилась, то…
-        if()
+        if(startPosition == line.size()-1)
         {
-            // startLine+1, startPosition=0
+            if(startLine != code.size()-1)
+            {
+                startPosition=-1;
+                startLine++;
+                line = code[startLine];
+            }
         }
     }
 
     //Вернуть результат функции
     return bracketIsFound;
 }
-*/
+
 
 void skipOneLineComment (const QStringList& code, int& currentLine, int& currentPosition)
 {
@@ -194,6 +226,8 @@ void skipOneLineComment (const QStringList& code, int& currentLine, int& current
     */
 
     QString line = code[currentLine];
+    currentPosition++; // начинаем после //
+
     if(currentLine!=code.size()-1)
     {
         if(line[line.size()-1]=='\\')
@@ -215,9 +249,6 @@ void skipOneLineComment (const QStringList& code, int& currentLine, int& current
         currentPosition=line.size();
 
 }
-
-
-
 
 bool skipMultilineComment (const QStringList& code, int& currentLine, int& currentPosition)
 {

@@ -6,26 +6,6 @@
 #include <QStack>
 #include <qDebug>
 
-enum ErrorsInInputDataType {
-    NoAccessToInputFile,
-    NoAccessToOutputFile,
-    EmptyInputFile,
-    UnclosedMultilineComment,
-    UnclosedStringConst,
-    UnclosedCharConst,
-    IncorrectFileExtension,
-    ExceedingMaxLengthInputFile
-};
-
-typedef enum {
-    Round,
-    Square,
-    Curly
-}BracketType;
-enum BracketSide{
-    Opening,
-    Closing
-};
 
 int readCppFile (const QString& filePath, QStringList& code, QSet <errorininputdata>& errors);
 int findAllIncorrectUsesOfBrackets (const QStringList& code, QSet<mistake>& mistakes, QSet <errorininputdata>& errors);
@@ -137,59 +117,67 @@ int findAllIncorrectUsesOfBrackets (const QStringList& code, QSet<mistake>& mist
 }
 */
 
-int findNextBracket (const QStringList& code, int& startLine, int& startPosition, QSet <errorininputdata>& errors)
+int findNextBracket (const QStringList& code, int& startLine, int& startPosition, errorininputdata& error)
 {
     int bracketIsFound=0; //1 - нашли; 0 - не нашли; -1 - ошибка кода
     QString line = code[startLine];
     int resultOfSkipping=-1;
 
     //Идти по строке, пока не нашли скобку или ErrorInInputData или пока не конец кода…
-    for(startPosition; bracketIsFound!=1 && errors.isEmpty() && startPosition < line.size(); startPosition++)
+    for(startPosition; bracketIsFound==0 && startPosition < line.size(); startPosition++)
     {
         //Если встретили одно- или многострочный коммент
         if(line[startPosition]=='/' && startPosition!=line.size()-1)
         {
-            if(line[startPosition++]=='/')
-                skipOneLineComment(code, startLine, startPosition);
-            if(line[startPosition++]=='*')
+            if(line[startPosition+1]=='/')
             {
+                startPosition++;
+                skipOneLineComment(code, startLine, startPosition);
+                line = code[startLine];
+            }
+            if(line[startPosition+1]=='*')
+            {
+                startPosition++;
                 resultOfSkipping = skipMultilineComment(code, startLine, startPosition);
+                line = code[startLine];
                 if(resultOfSkipping==0)
                 {
                     bracketIsFound = -1;
-                    errorininputdata newError(UnclosedMultilineComment, startLine, startPosition);
-                    errors.insert(newError);
+                    error.updateError(UnclosedMultilineComment, startLine, startPosition);
                 }
             }
         }
 
         //Если встретили символьную константу («`»), пропустить ее (skipCharConstant)
-        if(line[startPosition]=='\'')
+        if(line[startPosition]=='\'' && bracketIsFound != -1)
         {
             resultOfSkipping = skipCharConstant(code, startLine, startPosition);
+            line = code[startLine];
             if(resultOfSkipping==0)
             {
                 bracketIsFound = -1;
-                errorininputdata newError(UnclosedCharConst, startLine, startPosition);
-                errors.insert(newError);
+                error.updateError(UnclosedCharConst, startLine, startPosition);
             }
         }
 
         //Если встретили строковую константу («"»), пропустить ее (skipStringConstant)
-        if(line[startPosition]=='\"')
+        if(line[startPosition]=='\"' && bracketIsFound != -1)
         {
             resultOfSkipping = skipStringConstant(code, startLine, startPosition);
+            line = code[startLine];
             if(resultOfSkipping==0)
             {
                 bracketIsFound = -1;
-                errorininputdata newError(UnclosedStringConst, startLine, startPosition);
-                errors.insert(newError);
+                error.updateError(UnclosedStringConst, startLine, startPosition);
             }
         }
 
         //Если встретили скобку любого типа, то...
-        if(line[startPosition]=='(' || line[startPosition]==')' || line[startPosition]=='[' || line[startPosition]==']' || line[startPosition]=='{' || line[startPosition]=='}')
+        if(bracketIsFound != -1 && (line[startPosition]=='(' || line[startPosition]==')' || line[startPosition]=='[' || line[startPosition]==']' || line[startPosition]=='{' || line[startPosition]=='}'))
+        {
+            startPosition--; //(смещается)
             bracketIsFound = 1;
+        }
 
         //Если строка закончилась, то…
         if(startPosition == line.size()-1)
@@ -203,10 +191,11 @@ int findNextBracket (const QStringList& code, int& startLine, int& startPosition
         }
     }
 
+    if(bracketIsFound==-1)
+        startPosition--; //смещается
     //Вернуть результат функции
     return bracketIsFound;
 }
-
 
 void skipOneLineComment (const QStringList& code, int& currentLine, int& currentPosition)
 {
@@ -223,11 +212,10 @@ void skipOneLineComment (const QStringList& code, int& currentLine, int& current
         line = code[currentLine];
         lastchar=line.size()-1;
     }
-    */
+*/
 
     QString line = code[currentLine];
-    currentPosition++; // начинаем после //
-
+    currentPosition++;
     if(currentLine!=code.size()-1)
     {
         if(line[line.size()-1]=='\\')
@@ -247,12 +235,14 @@ void skipOneLineComment (const QStringList& code, int& currentLine, int& current
     }
     else
         currentPosition=line.size();
-
 }
 
 bool skipMultilineComment (const QStringList& code, int& currentLine, int& currentPosition)
 {
     bool resultOfSkipping=0; // 1 - успешно
+    int startOfCommentLine=currentLine;
+    int startOfCommentPosition=currentPosition; //буферы для ошибки
+
     QString line = code[currentLine];
     currentPosition++; // начинаем после *
 
@@ -276,6 +266,11 @@ bool skipMultilineComment (const QStringList& code, int& currentLine, int& curre
         }
     }
 
+    if(resultOfSkipping==0)
+    {
+        currentLine=startOfCommentLine;
+        currentPosition=startOfCommentPosition;
+    }
     //Вернуть результат проверки (нашли конец комментария или нет)
     return resultOfSkipping;
 }
@@ -283,11 +278,14 @@ bool skipMultilineComment (const QStringList& code, int& currentLine, int& curre
 bool skipCharConstant (const QStringList& code, int& currentLine, int& currentPosition)
 {
     bool resultOfSkipping=0; // 1 - успешно
+    int startOfCommentLine=currentLine;
+    int startOfCommentPosition=currentPosition; //буферы для ошибки
+
     QString line = code[currentLine];
     bool slashesFlag = 0;
     currentPosition++; // начинаем после открывающей кавычки
 
-    //Идти по строке, пока не нашли конец константы или пока не конец строки...
+    //Идти посимвольно по строке, пока не нашли конец константы или пока не конец строки...
     for(currentPosition; resultOfSkipping!=1 && currentPosition<line.size(); currentPosition++)
     {
         //Если встретили `\`, то...
@@ -311,13 +309,21 @@ bool skipCharConstant (const QStringList& code, int& currentLine, int& currentPo
         }
     }
 
+    if(resultOfSkipping==0)
+    {
+        currentLine=startOfCommentLine;
+        currentPosition=startOfCommentPosition;
+    }
     //Вернуть результат функции (успешность нахождения конца константы)
     return resultOfSkipping;
 }
 
 bool skipStringConstant (const QStringList& code, int& currentLine, int& currentPosition)
 {
-    bool resultOfSkipping=0; // 1 - успешно
+    int resultOfSkipping=0; // 1 - успешно
+    int startOfCommentLine=currentLine;
+    int startOfCommentPosition=currentPosition; //буферы для ошибки
+
     QString line = code[currentLine];
     int slashesCount=0;
     currentPosition++; // начинаем после открывающей кавычки
@@ -358,9 +364,12 @@ bool skipStringConstant (const QStringList& code, int& currentLine, int& current
         }
     }
     //Вернуть результат пропуска константы (нашли конец или нет)
+    if(resultOfSkipping==0)
+    {
+        currentLine=startOfCommentLine;
+        currentPosition=startOfCommentPosition;
+    }
     return resultOfSkipping;
-
-    // **если конец не нашли, то currentPosition на 1 больше последнего индекса, а если нашли - на ;
 }
 
 int updateContainerOfBrackets (bracket& newBracket, QStack <bracket>& brackets, QSet<mistake>& mistakes)
@@ -374,9 +383,9 @@ int updateContainerOfBrackets (bracket& newBracket, QStack <bracket>& brackets, 
     int index=0;
 
     //Если найденная скобка – открывающая, то…
-    if(newBracket.side == Opening)
+    if(newBracket.getSide() == Opening)
         brackets.push(newBracket);    //Добавить объект в контейнер
-    if(newBracket.side == Closing)
+    if(newBracket.getSide() == Closing)
     {
         //Найти в стеке парную открывающую скобку для текущей
         indexOfCouple = findCoupleForBracket(newBracket, brackets);
@@ -385,7 +394,7 @@ int updateContainerOfBrackets (bracket& newBracket, QStack <bracket>& brackets, 
         {
             //Проверить порядок скобки и последней из стека (последняя – того же типа, открывающая)
             lastBracket = brackets.top();
-            if(lastBracket.type==newBracket.type && lastBracket.side==Opening)
+            if(lastBracket.getType()==newBracket.getType() && lastBracket.getSide()==Opening)
                 order = 0;
             if(order==1) //Если порядок неверный, то...
             {
@@ -395,16 +404,16 @@ int updateContainerOfBrackets (bracket& newBracket, QStack <bracket>& brackets, 
                 {
                     index--;
                     --it;
-                    (*it).correctOfOrder = false;
+                    (*it).setOrder(false);
                 }
             }
             --it;
             coupleBracket = *it;
 
-            if(coupleBracket.correctOfOrder!=true) //Если у парной порядок неверный, то...
+            if(coupleBracket.getOrder()!=true) //Если у парной порядок неверный, то...
             {
                 //Создать новую ошибку (тип – IncorrectOrderOfBrackets)
-                mistake newMistake(newBracket, mistake::IncorrectOrderOfBrackets);
+                mistake newMistake(newBracket, IncorrectOrderOfBrackets);
                 //Добавить ее в контейнер с ошибками (mistakes)
                 mistakes.insert(newMistake);
                 countOfMistakes++;
@@ -415,7 +424,7 @@ int updateContainerOfBrackets (bracket& newBracket, QStack <bracket>& brackets, 
         else
         {
             // Если пары нет, то создать ошибку (ExcessiveClosingBracket) и добавить в mistakes
-            mistakes.insert(mistake(newBracket, mistake::ExcessiveClosingBracket));
+            mistakes.insert(mistake(newBracket, ExcessiveClosingBracket));
             countOfMistakes++;
         }
     }
@@ -426,7 +435,7 @@ int updateContainerOfBrackets (bracket& newBracket, QStack <bracket>& brackets, 
 
 int findCoupleForBracket(const bracket& newBracket, const QStack<bracket>& brackets)
 {
-    bracket::BracketType necessaryType = newBracket.type; //определили нужный тип
+    BracketType necessaryType = newBracket.getType(); //определили нужный тип
     int index=brackets.size();
     int result=0;
     //QList<bracket> bracketList = brackets.toList(); //из стека в лист
@@ -443,11 +452,11 @@ int findCoupleForBracket(const bracket& newBracket, const QStack<bracket>& brack
         {
             --it;
             index--;
-            if((*it).type == necessaryType)
-                if((*it).side == Opening)
+            if((*it).getType() == necessaryType)
+                if((*it).getSide() == Opening)
                     result=1;
         }
-        if(it==brackets.constBegin() && (*it).type!=necessaryType) //проверка первого
+        if(it==brackets.constBegin() && (*it).getType()!=necessaryType) //проверка первого
             index=-1;
     }
 

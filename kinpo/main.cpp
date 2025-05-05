@@ -7,16 +7,16 @@
 #include <qDebug>
 
 
-int readCppFile (const QString& filePath, QStringList& code, QSet <errorininputdata>& errors);
-int findAllIncorrectUsesOfBrackets (const QStringList& code, QSet<mistake>& mistakes, QSet <errorininputdata>& errors);
-int findNextBracket (const QStringList& code, int& startLine, int& startPosition, QSet <errorininputdata>& errors);
+int readCppFile (const QString& filePath, QStringList& code, errorininputdata& errors);
+int findAllIncorrectUsesOfBrackets (const QStringList& code, QSet<mistake>& mistakes, errorininputdata& error);
+int findNextBracket (const QStringList& code, int& startLine, int& startPosition, errorininputdata& error);
 void skipOneLineComment (const QStringList& code, int& currentLine, int& currentPosition);
 bool skipMultilineComment (const QStringList& code, int& currentLine, int& currentPosition);
 bool skipCharConstant (const QStringList& code, int& currentLine, int& currentPosition);
 bool skipStringConstant (const QStringList& code, int& currentLine, int& currentPosition);
 int updateContainerOfBrackets (bracket& newBracket, QStack <bracket>& brackets, QSet<mistake>& mistakes);
 int findCoupleForBracket (bracket& newBracket, QStack<bracket>& brackets);
-int generateOutputTxtFile (const QString& filePath, int countOfMistakes, QSet<mistake>& mistakes, QSet<errorininputdata>& errors);
+int generateOutputTxtFile (const QString& filePath, int countOfMistakes, QSet<mistake>& mistakes, errorininputdata& errors);
 
 int main(int argc, char *argv[])
 {
@@ -24,42 +24,37 @@ int main(int argc, char *argv[])
     //return a.exec();
 
 
-
     //Считать из параметров командной строки путь к входному файлу
+    QString inputFilePath;
     //Считать из параметров командной строки путь к выходному файлу
+    QString outputFilePath;
 
-    //Создать пустой контейнер для ошибок, связанных с входными данными
-    QSet<errorininputdata> errors;
 
-    //Считать данные из входного файла (readCppFile)
-    //Если ошибок во входных данных нет, то…
-    if(errors.isEmpty())
+    errorininputdata error;  // пустой объект для ошибки с входными данными
+    QSet<mistake> mistakes;
+    QStringList code;
+    int countOfMistakes;
+
+    int resultOfFunction;
+    resultOfFunction = readCppFile(inputFilePath, code, error);  //Считать данные из входного файла
+
+    //Если ошибок во входных данных нет, то проверить корректность использования всех скобок в исходном коде
+    if(resultOfFunction)
+        countOfMistakes = findAllIncorrectUsesOfBrackets(code, mistakes, error);
+
+    if(resultOfFunction && countOfMistakes != -1) // не было error
+        resultOfFunction = generateOutputTxtFile(outputFilePath, countOfMistakes, mistakes, error); //Сформировать выходной файл
+
+    if(!resultOfFunction)
     {
-        //Создать пустой контейнер для найденных ошибок, связанных с неправильным использованием скобок
-        QSet<mistake> mistakes;
-        int countOfMistakes;
-
-        //Проверить корректность использования всех скобок в исходном коде(с помощью функции findAllIncorrectUsesOfBrackets)
-        countOfMistakes = findAllIncorrectUsesOfBrackets();
-
-    }
-
-    if(errors.isEmpty())
-    {
-        //Сформировать выходной файл, содержащий все найденные ошибки (generateOutputTxtFile)
-
-    }
-
-    //Если QSet не пустой, то…
-    if(!(errors.isEmpty()))
-    {
-        //Вывести найденные ошибки с входными данными из контейнера
+        //Вывести найденную ошибку с входными данными
 
     }
 
     //Вернуть успешность завершения функции
     return 0;
 }
+
 /*
 int readCppFile (const QString& filePath, QStringList& code, QSet <errorininputdata>& errors)
 {
@@ -79,43 +74,65 @@ int readCppFile (const QString& filePath, QStringList& code, QSet <errorininputd
         }
     }
     //Вернуть успешность завершения функции
-    return 0;
+    return resultOfFunction; //1 - успешно
 }
+*/
 
-int findAllIncorrectUsesOfBrackets (const QStringList& code, QSet<mistake>& mistakes, QSet <errorininputdata>& errors)
+int findAllIncorrectUsesOfBrackets (const QStringList& code, QSet<mistake>& mistakes, errorininputdata& error)
 {
-    //Создать пустой контейнер для найденных скобок
-    QStack <bracket> brackets;
-    //Создать старт
-    int startLine=0, startPosition=0;
-    int countOfMistakes=0, bracketIsFound=0;
+    QStack<bracket> brackets; // стек для найденных скобок
+    QStack<bracket>::const_iterator it;
+    int startLine = 0, startPosition = 0; // старт
+    int countOfMistakes = 0;
+    int resultOfFound = 0; //1 - нашли; 0 - не нашли; -1 - ошибка кода
+    QString line = code[startLine];
 
-    //Пока не конец кода или пока не найдена ошибка кода...
-    while((startLine!=code.size() && startPosition!=...) && (errors.isEmpty()) )
+
+    //Пока не конец кода или пока не найдена error...
+    while(startPosition < line.size() && resultOfFound!=-1)
     {
-        //Найти скобку любого типа (круглая, квадратная, фигурная) в коде, начиная с startLine и startPosition
-        bracketIsFound=findNextBracket();
-        //Если скобка найдена, то...
-        if(bracketIsFound==1)
+        //Найти скобку любого типа в коде, начиная с startLine и startPosition
+        resultOfFound=findNextBracket(code, startLine, startPosition, error);
+        line = code[startLine];
+
+        //Если скобка найдена
+        if(resultOfFound == 1)
         {
-            //Создать объект новой скобки
-            bracket newBracket(&code, &startLine, &startPosition);
-            //Изменить содержимое контейнера с учетом новой скобки (с помощью updateContainerOfBrackets)
-
+            //Создать объект новой скобки и изменить содержимое стека
+            bracket newBracket(code, startLine, startPosition);
+            countOfMistakes += updateContainerOfBrackets(newBracket, brackets, mistakes);
         }
-        //Изменить стартовые данные (startPosition+1 / startLine+1, startPosition=0)
+
+        //Изменить стартовые данные
+        if(startPosition == line.size()-1)
+        {
+            if(startLine != code.size()-1)
+            {
+                startLine++;
+                startPosition=0;
+                line = code[startLine];
+            } else startPosition++;
+        } else startPosition++;
     }
-    //Если ошибка кода не найдена и контейнер для скобок не пустой, то…
-    if((errors.isEmpty()) && !(brackets.isEmpty()))
+
+    //Если error не найдена и стек не пустой, то…
+    if(resultOfFound!=-1 && !(brackets.isEmpty()))
     {
-        //Для каждого объекта Bracket в стеке - создать новый объект ошибки
-        //(конструктор класса Mistake, передав тип ошибки – UnclosedBracket) и
-        //    добавить ее в контейнер с ошибками (mistakes)
+        it = brackets.constBegin();
+        //Для каждой ошибки в стеке - создать новый объект(UnclosedBracket) и добавить в mistakes
+        for(it; it!=brackets.constEnd(); ++it)
+        {
+            mistakes.insert(mistake(*it, UnclosedBracket));
+            countOfMistakes++;
+        }
     }
+
+    if(resultOfFound == -1)
+        countOfMistakes=-1;
+
     //Вернуть количество ошибок в контейнер с ошибками mistakes
     return countOfMistakes;
 }
-*/
 
 int findNextBracket (const QStringList& code, int& startLine, int& startPosition, errorininputdata& error)
 {

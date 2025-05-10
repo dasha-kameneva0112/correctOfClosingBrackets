@@ -15,7 +15,7 @@ bool skipMultilineComment (const QStringList& code, int& currentLine, int& curre
 bool skipCharConstant (const QStringList& code, int& currentLine, int& currentPosition);
 bool skipStringConstant (const QStringList& code, int& currentLine, int& currentPosition);
 int updateContainerOfBrackets (bracket& newBracket, QStack <bracket>& brackets, QSet<mistake>& mistakes);
-int findCoupleForBracket (bracket& newBracket, QStack<bracket>& brackets);
+int findCoupleForBracket(const bracket& newBracket, const QStack<bracket>& brackets);
 int generateOutputTxtFile (const QString& filePath, int countOfMistakes, QSet<mistake>& mistakes, errorininputdata& errors);
 
 int main(int argc, char *argv[])
@@ -55,9 +55,9 @@ int main(int argc, char *argv[])
     return 0;
 }
 
-/*
+
 int readCppFile (const QString& filePath, QStringList& code, QSet <errorininputdata>& errors)
-{
+{/*
     //Открыть указанный входной файл
     //Если не удалось успешно открыть входной файл, то...
     if()
@@ -75,8 +75,9 @@ int readCppFile (const QString& filePath, QStringList& code, QSet <errorininputd
     }
     //Вернуть успешность завершения функции
     return resultOfFunction; //1 - успешно
-}
 */
+}
+
 
 int findAllIncorrectUsesOfBrackets (const QStringList& code, QSet<mistake>& mistakes, errorininputdata& error)
 {
@@ -481,9 +482,10 @@ int findCoupleForBracket(const bracket& newBracket, const QStack<bracket>& brack
     return index;
 }
 
-/*
+
 int generateOutputTxtFile (const QString& filePath, int countOfMistakes, QSet<mistake>& mistakes, QSet<errorininputdata>& errors)
 {
+    /*
     //Если расширение выходного файла неверное (не .txt), то…
     if()
     {
@@ -521,5 +523,6 @@ int generateOutputTxtFile (const QString& filePath, int countOfMistakes, QSet<mi
 
     //Вернуть успешность завершения функции
     return 0;
+    */
 }
-*/
+

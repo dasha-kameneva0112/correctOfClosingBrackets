@@ -10,7 +10,8 @@ SOURCES += \
         bracket.cpp \
         errorininputdata.cpp \
         main.cpp \
-        mistake.cpp
+        mistake.cpp \
+        testfindcoupleforbracket.cpp
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
@@ -20,4 +21,5 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 HEADERS += \
     bracket.h \
     errorininputdata.h \
-    mistake.h
+    mistake.h \
+    testfindcoupleforbracket.h

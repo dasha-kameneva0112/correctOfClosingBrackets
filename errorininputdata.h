@@ -19,6 +19,10 @@ public:
     errorininputdata(ErrorsInInputDataType currentType);
     errorininputdata(ErrorsInInputDataType currentType, int indexOfLineWithError, int position);
     void updateError(ErrorsInInputDataType currentType, int indexOfLineWithError, int position);
+    void addError(ErrorsInInputDataType currentType);
+    ErrorsInInputDataType getType() const;
+    int getLine() const;
+    int getPosition() const;
 
 private:
     ErrorsInInputDataType type;

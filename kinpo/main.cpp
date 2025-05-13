@@ -5,9 +5,12 @@
 #include <QSet>
 #include <QStack>
 #include <qDebug>
+#include <QFile>
+#include <QFileInfo>
+#include <QTextStream>
 
 
-int readCppFile (const QString& filePath, QStringList& code, errorininputdata& errors);
+int readCppFile (const QString& filePath, QStringList& code, errorininputdata& error);
 int findAllIncorrectUsesOfBrackets (const QStringList& code, QSet<mistake>& mistakes, errorininputdata& error);
 int findNextBracket (const QStringList& code, int& startLine, int& startPosition, errorininputdata& error);
 void skipOneLineComment (const QStringList& code, int& currentLine, int& currentPosition);
@@ -16,68 +19,135 @@ bool skipCharConstant (const QStringList& code, int& currentLine, int& currentPo
 bool skipStringConstant (const QStringList& code, int& currentLine, int& currentPosition);
 int updateContainerOfBrackets (bracket& newBracket, QStack <bracket>& brackets, QSet<mistake>& mistakes);
 int findCoupleForBracket(const bracket& newBracket, const QStack<bracket>& brackets);
-int generateOutputTxtFile (const QString& filePath, int countOfMistakes, QSet<mistake>& mistakes, errorininputdata& errors);
+int generateOutputTxtFile (const QString& filePath, const QStringList& code, QSet<mistake>& mistakes, errorininputdata& errors);
 
 int main(int argc, char *argv[])
 {
-    //QCoreApplication a(argc, argv);
-    //return a.exec();
+    qDebug() << "Starting program with arguments:";
+    for (int i = 0; i < argc; ++i) {
+        qDebug() << "argv[" << i << "] =" << argv[i];
+    }
 
+    QCoreApplication a(argc, argv);
 
-    //Считать из параметров командной строки путь к входному файлу
-    QString inputFilePath;
-    //Считать из параметров командной строки путь к выходному файлу
-    QString outputFilePath;
-
+    //Считать из параметров командной строки путь к входному и выходному файлу
+    QString inputFilePath = argv[1];
+    QString outputFilePath = argv[2];
 
     errorininputdata error;  // пустой объект для ошибки с входными данными
     QSet<mistake> mistakes;
     QStringList code;
-    int countOfMistakes;
+    int countOfMistakes = 0;
 
+    //Считать данные из входного файла
     int resultOfFunction;
-    resultOfFunction = readCppFile(inputFilePath, code, error);  //Считать данные из входного файла
+    resultOfFunction = readCppFile(inputFilePath, code, error);
 
     //Если ошибок во входных данных нет, то проверить корректность использования всех скобок в исходном коде
     if(resultOfFunction)
         countOfMistakes = findAllIncorrectUsesOfBrackets(code, mistakes, error);
 
     if(resultOfFunction && countOfMistakes != -1) // не было error
-        resultOfFunction = generateOutputTxtFile(outputFilePath, countOfMistakes, mistakes, error); //Сформировать выходной файл
+        resultOfFunction = generateOutputTxtFile(outputFilePath, code, mistakes, error); //Сформировать выходной файл
 
     if(!resultOfFunction)
     {
         //Вывести найденную ошибку с входными данными
-
+        ErrorsInInputDataType type = error.getType();
+        int line, pos;
+        switch(type)
+        {
+        case NoAccessToInputFile:
+            qInfo() << "Неверно указан файл с входными данными. Возможно, файл не существует." << '\n';
+            break;
+        case NoAccessToOutputFile:
+            qInfo() << "Неверно указан файл для выходных данных. Возможно, указанного расположения не существует или нет прав на запись." << '\n';
+            break;
+        case EmptyInputFile:
+            qInfo() << "Неверно указан файл с входными данными. Данный файл пуст. " << '\n';
+            break;
+        case UnclosedMultilineComment:
+            line = error.getLine();
+            pos = error.getPosition();
+            qInfo() << "Во входном файле содержится код, в котором присутствует незакрытый многострочный комментарий:" << '\n';
+            qInfo() << line << ": " << code[line] << '\n';
+            qInfo() << QString(QString::number(line).length()+pos+2, ' ') << '^' << '\n';
+            break;
+        case UnclosedStringConst:
+            line = error.getLine();
+            pos = error.getPosition();
+            qInfo() << "Во входном файле содержится код, в котором присутствует не заканчивающаяся строковая константа:" << '\n';
+            qInfo() << line << ": " << code[line] << '\n';
+            qInfo() << QString(QString::number(line).length()+pos+2, ' ') << '^' << '\n';
+            break;
+        case UnclosedCharConst:
+            line = error.getLine();
+            pos = error.getPosition();
+            qInfo() << "Во входном файле содержится код, в котором присутствует не заканчивающаяся символьная константа: " << '\n';
+            qInfo() << line << ": " << code[line] << '\n';
+            qInfo() << QString(QString::number(line).length()+pos+2, ' ') << '^' << '\n';
+            break;
+        case IncorrectFileExtension:
+            qInfo() << "Неверно указан файл для выходных данных. Расширение файла некорректно. " << '\n';
+            break;
+        case ExceedingMaxLengthInputFile:
+            qInfo() << "Программа принимает на вход код длиной больше, чем максимально допустимая." << '\n';
+        }
     }
 
     //Вернуть успешность завершения функции
     return 0;
 }
 
-
-int readCppFile (const QString& filePath, QStringList& code, QSet <errorininputdata>& errors)
-{/*
-    //Открыть указанный входной файл
-    //Если не удалось успешно открыть входной файл, то...
-    if()
+int readCppFile (const QString& filePath, QStringList& code, errorininputdata& error)
+{
+    bool errorFound = 0; //0 - нет; 1 - найдена
+    bool resultOfFunction = 1;
+    QFileInfo fileInf(filePath);
+    if(fileInf.suffix() != "cpp" && fileInf.suffix() != "h" && fileInf.suffix() != "txt") //если расширение неправильное
     {
-        //Создать новый объект ошибки (с помощью конструктора класса ErrorInInputData), передав тип ошибки – NoAccessToInputFile, и добавить его в контейнер с ошибками
+        errorFound = 1;
+        error.addError(IncorrectFileExtension);
     }
-    else
-    {
-        //Считать содержимое исходного кода из входного файла в массив строк (code)
-        //Если количество строк превышает допустимое или входной файл пуст, то...
-        {
-        // Создать новый объект ошибки (с помощью конструктора класса ErrorInInputData), передав тип ошибки – ExceedingMaxLengthInputFile или EmptyInputFile, и добавить его в контейнер с ошибками (errors)
 
+
+    if(errorFound==0)
+    {
+        //Открыть указанный входной файл
+        QFile file(filePath);
+        //Если не удалось успешно открыть входной файл, то...
+        if(!file.open(QIODevice::ReadOnly))
+        {
+            errorFound = 1;
+            error.addError(NoAccessToInputFile);
+        }
+        else
+        {
+            //Считать содержимое исходного кода из входного файла в массив строк (code)
+            QTextStream inp(&file);
+            while(!inp.atEnd())
+                code << inp.readLine();
+
+            //Если количество строк превышает допустимое или входной файл пуст, то...
+            if(code.size()>10000)
+            {
+                errorFound = 1;
+                error.addError(ExceedingMaxLengthInputFile);
+            }
+            if(code.isEmpty())
+            {
+                errorFound = 1;
+                error.addError(EmptyInputFile);
+            }
         }
     }
+
+    if(errorFound==1)
+        resultOfFunction=0;
+
     //Вернуть успешность завершения функции
     return resultOfFunction; //1 - успешно
-*/
 }
-
 
 int findAllIncorrectUsesOfBrackets (const QStringList& code, QSet<mistake>& mistakes, errorininputdata& error)
 {
@@ -482,47 +552,80 @@ int findCoupleForBracket(const bracket& newBracket, const QStack<bracket>& brack
     return index;
 }
 
-
-int generateOutputTxtFile (const QString& filePath, int countOfMistakes, QSet<mistake>& mistakes, QSet<errorininputdata>& errors)
+int generateOutputTxtFile (const QString& filePath, const QStringList& code, QSet<mistake>& mistakes, errorininputdata& error)
 {
-    /*
+    bool errorFound = 0; //0 - нет; 1 - найдена
+    bool resultOfFunction = 1;
+    QFileInfo fileInf(filePath);
+
     //Если расширение выходного файла неверное (не .txt), то…
-    if()
+    if(fileInf.suffix() != "txt")
     {
-        //Создать новый объект ошибки (с помощью конструктора класса
-        // ErrorInInputData), передав тип ошибки – IncorrectFileExtension, и добавить
-        // его в контейнер с ошибками (errors)
+        //Создать новый объект ошибки, передав тип ошибки – IncorrectFileExtension
+        errorFound = 1;
+        error.addError(IncorrectFileExtension);
     }
     else
     {
         //Создать указанный выходной файл
-        //Если не удалось успешно создать выходной файл, то...
-        if()
+        QFile file(filePath);
+        //Если не удалось успешно открыть выходной файл, то...
+        if(!file.open(QIODevice::WriteOnly))
         {
-            //Создать новый объект ошибки, передав тип ошибки –
-            // NoAccessToOutputFile, и добавить его в контейнер с ошибками (errors)
+            //Создать новый объект ошибки, передав тип ошибки – NoAccessToOutputFile
+            errorFound = 1;
+            error.addError(NoAccessToOutputFile);
         }
         else
         {
+            QTextStream out(&file); //поток для записи
+            //out.setEncoding("UTF-8"); // Установка кодировки
+
             //Если количество выявленных ошибок равно 0, то…
-            if(countOfMistakes==0)
+            if(mistakes.isEmpty())
             {
-                //Добавить в выходной файл информацию, что все скобки в
-                // коде используются корректно
+                // все скобки в коде используются корректно
+                out << "Корректное использование всех скобок" << '\n';
             }
             else
             {
-                //Добавить в выходной файл информацию, что в коде
-                // присутствует некорректное использование скобок
-                //Добавить все выявленные ошибки из контейнера с ошибками
-                // некорректного использования скобок в выходной файл и их
-                //    соответствующее описание
+                // в коде присутствует некорректное использование скобок
+                out << "Некорректное использование скобок" << '\n';
+
+                //Добавить все выявленные ошибки из контейнера с ошибками и их описание
+                QSet<mistake>::const_iterator iter=mistakes.constBegin();
+                MistakeWithBracketsType type;
+                bracket currentBracket;
+                int line, pos;
+                for(iter; iter!=mistakes.constEnd(); ++iter)
+                {
+                    type = (*iter).getType();
+                    currentBracket = (*iter).getBracket();
+                    line = currentBracket.getLine();
+                    pos = currentBracket.getPosition();
+
+                    switch (type)
+                    {
+                    case UnclosedBracket:
+                        out << "Найдена незакрытая скобка:" << '\n';
+                        break;
+                    case ExcessiveClosingBracket:
+                        out << "Найдена избыточная закрывающая скобка:" << '\n';
+                        break;
+                    case IncorrectOrderOfBrackets:
+                        out << "Найден неправильный порядок закрытия скобок:" << '\n';
+                        break;
+                    }
+                    out << line << ": " << code[line] << '\n';
+                    out << QString(QString::number(line).length()+pos+2, ' ') << '^' << '\n';
+                }
             }
         }
     }
 
-    //Вернуть успешность завершения функции
-    return 0;
-    */
-}
+    if(errorFound==1)
+        resultOfFunction=0;
 
+    //Вернуть успешность завершения функции
+    return resultOfFunction; //1 - успешно
+}

@@ -20,3 +20,16 @@ void errorininputdata::updateError(ErrorsInInputDataType currentType, int indexO
     numberOfLine=indexOfLineWithError;
     positionOfError=position;
 }
+
+void errorininputdata::addError(ErrorsInInputDataType currentType)
+{    type=currentType; }
+
+
+ErrorsInInputDataType errorininputdata::getType() const
+{    return this->type; }
+
+int errorininputdata::getLine() const
+{    return this->numberOfLine; }
+
+int errorininputdata::getPosition() const
+{    return this->positionOfError; }

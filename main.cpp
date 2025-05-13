@@ -19,7 +19,7 @@ bool skipCharConstant (const QStringList& code, int& currentLine, int& currentPo
 bool skipStringConstant (const QStringList& code, int& currentLine, int& currentPosition);
 int updateContainerOfBrackets (bracket& newBracket, QStack <bracket>& brackets, QSet<mistake>& mistakes);
 int findCoupleForBracket(const bracket& newBracket, const QStack<bracket>& brackets);
-int generateOutputTxtFile (const QString& filePath, int countOfMistakes, QSet<mistake>& mistakes, errorininputdata& errors);
+int generateOutputTxtFile (const QString& filePath, const QStringList& code, QSet<mistake>& mistakes, errorininputdata& errors);
 
 int main(int argc, char *argv[])
 {
@@ -81,7 +81,7 @@ int readCppFile (const QString& filePath, QStringList& code, errorininputdata& e
         else
         {
             //Считать содержимое исходного кода из входного файла в массив строк (code)
-            QTextStream inp(&file); // поток для записи
+            QTextStream inp(&file);
             while(!inp.atEnd())
                 code << inp.readLine();
 
@@ -511,46 +511,74 @@ int findCoupleForBracket(const bracket& newBracket, const QStack<bracket>& brack
 }
 
 
-int generateOutputTxtFile (const QString& filePath, int countOfMistakes, QSet<mistake>& mistakes, QSet<errorininputdata>& errors)
+int generateOutputTxtFile (const QString& filePath, const QStringList& code, QSet<mistake>& mistakes, errorininputdata& error)
 {
-    /*
+    bool errorFound = 0; //0 - нет; 1 - найдена
+    bool resultOfFunction = 1;
+    QFileInfo fileInf(filePath);
+
     //Если расширение выходного файла неверное (не .txt), то…
-    if()
+    if(fileInf.suffix() != "txt")
     {
-        //Создать новый объект ошибки (с помощью конструктора класса
-        // ErrorInInputData), передав тип ошибки – IncorrectFileExtension, и добавить
-        // его в контейнер с ошибками (errors)
+        //Создать новый объект ошибки, передав тип ошибки – IncorrectFileExtension
+        errorFound = 1;
+        error.addError(IncorrectFileExtension);
     }
     else
     {
         //Создать указанный выходной файл
-        //Если не удалось успешно создать выходной файл, то...
-        if()
+        QFile file(fileInf);
+        //Если не удалось успешно открыть выходной файл, то...
+        if(!file.open(QIODevice::WriteOnly))
         {
-            //Создать новый объект ошибки, передав тип ошибки –
-            // NoAccessToOutputFile, и добавить его в контейнер с ошибками (errors)
+            //Создать новый объект ошибки, передав тип ошибки – NoAccessToOutputFile
+            errorFound = 1;
+            error.addError(NoAccessToOutputFile);
         }
         else
         {
+            QTextStream out(&file); //поток для записи
+            //out.setEncoding("UTF-8"); // Установка кодировки
+
             //Если количество выявленных ошибок равно 0, то…
-            if(countOfMistakes==0)
+            if(mistakes.isEmpty())
             {
-                //Добавить в выходной файл информацию, что все скобки в
-                // коде используются корректно
+                // все скобки в коде используются корректно
+                out << "Корректное использование всех скобок" << '\n';
             }
             else
             {
-                //Добавить в выходной файл информацию, что в коде
-                // присутствует некорректное использование скобок
-                //Добавить все выявленные ошибки из контейнера с ошибками
-                // некорректного использования скобок в выходной файл и их
-                //    соответствующее описание
+                // в коде присутствует некорректное использование скобок
+                out << "Некорректное использование скобок" << '\n';
+
+                //Добавить все выявленные ошибки из контейнера с ошибками и их описание
+                QSet<mistake>::const_iterator iter=mistakes.constBegin();
+                MistakeWithBracketsType type;
+                bracket currentBracket;
+                int line, pos;
+                for(iter; iter!=mistakes.constEnd(); ++iter)
+                {
+                    type = (*iter).getType();
+                    currentBracket = (*iter).getBracket();
+                    line = currentBracket.getLine();
+                    pos = currentBracket.getPosition();
+                    if(type == UnclosedBracket)
+                        out << "Найдена незакрытая скобка:" << '\n';
+                    if(type == ExcessiveClosingBracket)
+                        out << "Найдена избыточная закрывающая скобка:" << '\n';
+                    if(type == IncorrectOrderOfBrackets)
+                        out << "Найден неправильный порядок закрытия скобок:" << '\n';
+
+                    out << line << ": " << code[line] << '\n';
+                    for(int i=0; i<pos; i++)
+                        out << ' ';
+                    out << '^' << '\n';
+                }
             }
         }
     }
 
     //Вернуть успешность завершения функции
     return 0;
-    */
 }
 

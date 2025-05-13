@@ -5,9 +5,12 @@
 #include <QSet>
 #include <QStack>
 #include <qDebug>
+#include <QFile>
+#include <QFileInfo>
+#include <QTextStream>
 
 
-int readCppFile (const QString& filePath, QStringList& code, errorininputdata& errors);
+int readCppFile (const QString& filePath, QStringList& code, errorininputdata& error);
 int findAllIncorrectUsesOfBrackets (const QStringList& code, QSet<mistake>& mistakes, errorininputdata& error);
 int findNextBracket (const QStringList& code, int& startLine, int& startPosition, errorininputdata& error);
 void skipOneLineComment (const QStringList& code, int& currentLine, int& currentPosition);
@@ -23,20 +26,18 @@ int main(int argc, char *argv[])
     //QCoreApplication a(argc, argv);
     //return a.exec();
 
-
-    //Считать из параметров командной строки путь к входному файлу
-    QString inputFilePath;
-    //Считать из параметров командной строки путь к выходному файлу
-    QString outputFilePath;
-
+    //Считать из параметров командной строки путь к входному и выходному файлу
+    QString inputFilePath = argv[1];
+    QString outputFilePath = argv[2];
 
     errorininputdata error;  // пустой объект для ошибки с входными данными
     QSet<mistake> mistakes;
     QStringList code;
     int countOfMistakes;
 
+    //Считать данные из входного файла
     int resultOfFunction;
-    resultOfFunction = readCppFile(inputFilePath, code, error);  //Считать данные из входного файла
+    resultOfFunction = readCppFile(inputFilePath, code, error);
 
     //Если ошибок во входных данных нет, то проверить корректность использования всех скобок в исходном коде
     if(resultOfFunction)
@@ -56,26 +57,53 @@ int main(int argc, char *argv[])
 }
 
 
-int readCppFile (const QString& filePath, QStringList& code, QSet <errorininputdata>& errors)
-{/*
-    //Открыть указанный входной файл
-    //Если не удалось успешно открыть входной файл, то...
-    if()
+int readCppFile (const QString& filePath, QStringList& code, errorininputdata& error)
+{
+    bool errorFound = 0; //0 - нет; 1 - найдена
+    bool resultOfFunction = 1;
+    QFileInfo fileInf(filePath);
+    if(fileInf.suffix() != "cpp" || fileInf.suffix() != "h") //если расширение неправильное
     {
-        //Создать новый объект ошибки (с помощью конструктора класса ErrorInInputData), передав тип ошибки – NoAccessToInputFile, и добавить его в контейнер с ошибками
+        errorFound = 1;
+        error.addError(IncorrectFileExtension);
     }
-    else
-    {
-        //Считать содержимое исходного кода из входного файла в массив строк (code)
-        //Если количество строк превышает допустимое или входной файл пуст, то...
-        {
-        // Создать новый объект ошибки (с помощью конструктора класса ErrorInInputData), передав тип ошибки – ExceedingMaxLengthInputFile или EmptyInputFile, и добавить его в контейнер с ошибками (errors)
 
+    if(errorFound==0)
+    {
+        //Открыть указанный входной файл
+        QFile file(filePath);
+        //Если не удалось успешно открыть входной файл, то...
+        if(!file.open(QIODevice::ReadOnly))
+        {
+            errorFound = 1;
+            error.addError(NoAccessToInputFile);
+        }
+        else
+        {
+            //Считать содержимое исходного кода из входного файла в массив строк (code)
+            QTextStream inp(&file); // поток для записи
+            while(!inp.atEnd())
+                code << inp.readLine();
+
+            //Если количество строк превышает допустимое или входной файл пуст, то...
+            if(code.size()>10000)
+            {
+                errorFound = 1;
+                error.addError(ExceedingMaxLengthInputFile);
+            }
+            if(code.isEmpty())
+            {
+                errorFound = 1;
+                error.addError(EmptyInputFile);
+            }
         }
     }
+
+    if(errorFound==1)
+        resultOfFunction=0;
+
     //Вернуть успешность завершения функции
     return resultOfFunction; //1 - успешно
-*/
 }
 
 

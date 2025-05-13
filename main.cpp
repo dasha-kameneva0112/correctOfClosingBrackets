@@ -23,6 +23,11 @@ int generateOutputTxtFile (const QString& filePath, const QStringList& code, QSe
 
 int main(int argc, char *argv[])
 {
+    qDebug() << "Starting program with arguments:";
+    for (int i = 0; i < argc; ++i) {
+        qDebug() << "argv[" << i << "] =" << argv[i];
+    }
+
     QCoreApplication a(argc, argv);
 
     //Считать из параметров командной строки путь к входному и выходному файлу
@@ -52,41 +57,41 @@ int main(int argc, char *argv[])
         int line, pos;
         switch(type)
         {
-            case NoAccessToInputFile:
-                qInfo() << "Неверно указан файл с входными данными. Возможно, файл не существует." << '\n';
-                break;
-            case NoAccessToOutputFile:
-                qInfo() << "Неверно указан файл для выходных данных. Возможно, указанного расположения не существует или нет прав на запись." << '\n';
-                break;
-            case EmptyInputFile:
-                qInfo() << "Неверно указан файл с входными данными. Данный файл пуст. " << '\n';
-                break;
-            case UnclosedMultilineComment:
-                line = error.getLine();
-                pos = error.getPosition();
-                qInfo() << "Во входном файле содержится код, в котором присутствует незакрытый многострочный комментарий:" << '\n';
-                qInfo() << line << ": " << code[line] << '\n';
-                qInfo() << QString(pos, ' ') << '^' << '\n';
-                break;
-            case UnclosedStringConst:
-                line = error.getLine();
-                pos = error.getPosition();
-                qInfo() << "Во входном файле содержится код, в котором присутствует не заканчивающаяся строковая константа:" << '\n';
-                qInfo() << line << ": " << code[line] << '\n';
-                qInfo() << QString(pos, ' ') << '^' << '\n';
-                break;
-            case UnclosedCharConst:
-                line = error.getLine();
-                pos = error.getPosition();
-                qInfo() << "Во входном файле содержится код, в котором присутствует не заканчивающаяся символьная константа: " << '\n';
-                qInfo() << line << ": " << code[line] << '\n';
-                qInfo() << QString(pos, ' ') << '^' << '\n';
-                break;
-            case IncorrectFileExtension:
-                qInfo() << "Неверно указан файл для выходных данных. Расширение файла некорректно. " << '\n';
-                break;
-            case ExceedingMaxLengthInputFile:
-                qInfo() << "Программа принимает на вход код длиной больше, чем максимально допустимая." << '\n';
+        case NoAccessToInputFile:
+            qInfo() << "Неверно указан файл с входными данными. Возможно, файл не существует." << '\n';
+            break;
+        case NoAccessToOutputFile:
+            qInfo() << "Неверно указан файл для выходных данных. Возможно, указанного расположения не существует или нет прав на запись." << '\n';
+            break;
+        case EmptyInputFile:
+            qInfo() << "Неверно указан файл с входными данными. Данный файл пуст. " << '\n';
+            break;
+        case UnclosedMultilineComment:
+            line = error.getLine();
+            pos = error.getPosition();
+            qInfo() << "Во входном файле содержится код, в котором присутствует незакрытый многострочный комментарий:" << '\n';
+            qInfo() << line << ": " << code[line] << '\n';
+            qInfo() << QString(QString::number(line).length()+pos+2, ' ') << '^' << '\n';
+            break;
+        case UnclosedStringConst:
+            line = error.getLine();
+            pos = error.getPosition();
+            qInfo() << "Во входном файле содержится код, в котором присутствует не заканчивающаяся строковая константа:" << '\n';
+            qInfo() << line << ": " << code[line] << '\n';
+            qInfo() << QString(QString::number(line).length()+pos+2, ' ') << '^' << '\n';
+            break;
+        case UnclosedCharConst:
+            line = error.getLine();
+            pos = error.getPosition();
+            qInfo() << "Во входном файле содержится код, в котором присутствует не заканчивающаяся символьная константа: " << '\n';
+            qInfo() << line << ": " << code[line] << '\n';
+            qInfo() << QString(QString::number(line).length()+pos+2, ' ') << '^' << '\n';
+            break;
+        case IncorrectFileExtension:
+            qInfo() << "Неверно указан файл для выходных данных. Расширение файла некорректно. " << '\n';
+            break;
+        case ExceedingMaxLengthInputFile:
+            qInfo() << "Программа принимает на вход код длиной больше, чем максимально допустимая." << '\n';
         }
     }
 
@@ -94,17 +99,17 @@ int main(int argc, char *argv[])
     return 0;
 }
 
-
 int readCppFile (const QString& filePath, QStringList& code, errorininputdata& error)
 {
     bool errorFound = 0; //0 - нет; 1 - найдена
     bool resultOfFunction = 1;
     QFileInfo fileInf(filePath);
-    if(fileInf.suffix() != "cpp" && fileInf.suffix() != "h") //если расширение неправильное
+    if(fileInf.suffix() != "cpp" && fileInf.suffix() != "h" && fileInf.suffix() != "txt") //если расширение неправильное
     {
         errorFound = 1;
         error.addError(IncorrectFileExtension);
     }
+
 
     if(errorFound==0)
     {
@@ -601,18 +606,18 @@ int generateOutputTxtFile (const QString& filePath, const QStringList& code, QSe
 
                     switch (type)
                     {
-                        case UnclosedBracket:
-                            out << "Найдена незакрытая скобка:" << '\n';
-                            break;
-                        case ExcessiveClosingBracket:
-                            out << "Найдена избыточная закрывающая скобка:" << '\n';
-                            break;
-                        case IncorrectOrderOfBrackets:
-                            out << "Найден неправильный порядок закрытия скобок:" << '\n';
-                            break;
+                    case UnclosedBracket:
+                        out << "Найдена незакрытая скобка:" << '\n';
+                        break;
+                    case ExcessiveClosingBracket:
+                        out << "Найдена избыточная закрывающая скобка:" << '\n';
+                        break;
+                    case IncorrectOrderOfBrackets:
+                        out << "Найден неправильный порядок закрытия скобок:" << '\n';
+                        break;
                     }
                     out << line << ": " << code[line] << '\n';
-                    out << QString(pos, ' ') << '^' << '\n';
+                    out << QString(QString::number(line).length()+pos+2, ' ') << '^' << '\n';
                 }
             }
         }
@@ -624,4 +629,3 @@ int generateOutputTxtFile (const QString& filePath, const QStringList& code, QSe
     //Вернуть успешность завершения функции
     return resultOfFunction; //1 - успешно
 }
-

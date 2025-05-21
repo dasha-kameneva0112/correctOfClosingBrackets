@@ -11,7 +11,11 @@ SOURCES += \
         errorininputdata.cpp \
         main.cpp \
         mistake.cpp \
-        testfindcoupleforbracket.cpp
+        testfindcoupleforbracket.cpp \
+        testskipstringconstant.cpp \
+        testupdateconteinerofbrackets.cpp
+
+QT += testlib
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
@@ -21,5 +25,8 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 HEADERS += \
     bracket.h \
     errorininputdata.h \
+    main.h \
     mistake.h \
-    testfindcoupleforbracket.h
+    testfindcoupleforbracket.h \
+    testskipstringconstant.h \
+    testupdateconteinerofbrackets.h

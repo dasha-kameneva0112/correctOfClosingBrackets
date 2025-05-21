@@ -2,7 +2,6 @@
 #include <QtTest/QtTest>
 #include <QStack>
 
-
 testfindcoupleforbracket::testfindcoupleforbracket(QObject *parent) : QObject(parent) {}
 
 void testfindcoupleforbracket::roundBracket() // №1.1. Круглая скобка

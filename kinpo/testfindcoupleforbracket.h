@@ -1,10 +1,7 @@
 #ifndef TESTFINDCOUPLEFORBRACKET_H
 #define TESTFINDCOUPLEFORBRACKET_H
 #include <QObject>
-#include "bracket.h"
-
-extern int findCoupleForBracket(const bracket& newBracket, const QStack<bracket>& brackets);
-
+#include "main.h"
 
 class testfindcoupleforbracket : public QObject
 {

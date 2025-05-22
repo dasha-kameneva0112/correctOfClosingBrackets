@@ -1,7 +1,17 @@
+#include <QCoreApplication>
 #include "main.h"
 
 int main(int argc, char *argv[])
 {
+    QTest::qExec(new testfindcoupleforbracket, argc, argv);
+    QTest::qExec(new testupdateconteinerofbrackets, argc, argv);
+    QTest::qExec(new testskipstringconstant, argc, argv);
+    QTest::qExec(new testskipcharconstant, argc, argv);
+    QTest::qExec(new testskipmultilinecomment, argc, argv);
+    QTest::qExec(new testskipstringconstant, argc, argv);
+    QTest::qExec(new testfindnextbracket, argc, argv);
+    QTest::qExec(new testfindallincorrectusesofbrackets, argc, argv);
+
     qDebug() << "Starting program with arguments:";
     for (int i = 0; i < argc; ++i) {
         qDebug() << "argv[" << i << "] =" << argv[i];
@@ -332,7 +342,6 @@ bool skipMultilineComment (const QStringList& code, int& currentLine, int& curre
             }
         }
     }
-
     if(resultOfSkipping==0)
     {
         currentLine=startOfCommentLine;
@@ -375,7 +384,7 @@ bool skipCharConstant (const QStringList& code, int& currentLine, int& currentPo
                 slashesFlag=0;
         }
     }
-
+    currentPosition--; //на символ закрывающей кавычки
     if(resultOfSkipping==0)
     {
         currentLine=startOfCommentLine;
@@ -430,6 +439,7 @@ bool skipStringConstant (const QStringList& code, int& currentLine, int& current
             }
         }
     }
+    currentPosition--; //на символ закрывающей кавычки
     //Вернуть результат пропуска константы (нашли конец или нет)
     if(resultOfSkipping==0)
     {

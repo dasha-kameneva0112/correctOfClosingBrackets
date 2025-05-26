@@ -3,89 +3,65 @@
 
 testskiponelinecomment::testskiponelinecomment(QObject *parent) : QObject(parent) {}
 
-
-void testskiponelinecomment::standartOneLineComment() //№1. стандартный однострочный комментарий (в конце строки)
+void testskiponelinecomment::add_data()
 {
-    QStringList code = {
-        "int main()",
-        "{",
-        "int x = 5; // comment",
-        "int y = 10;",
-        "}"
-    };
-    int currentLine=2;
-    int currentPosition=12;
+    // колонки параметры + ожидемый результат
+    QTest::addColumn<QStringList>("code");
+    QTest::addColumn<int>("currentLine");
+    QTest::addColumn<int>("currentPosition");
+    QTest::addColumn<int>("exp_currentLine");
+    QTest::addColumn<int>("exp_currentPosition");
 
-    skipOneLineComment(code, currentLine, currentPosition);
-    QVERIFY2(currentLine==3, "Error in currentLine");
-    QVERIFY2(currentPosition==0, "Error in currentPosition");
+    //Создаем строки‐тесты и заполняем таблицу данными 
+
+    //№1. стандартный однострочный комментарий (в конце строки)
+    QStringList test_code = { "int main()", "{",
+            "int x = 5; // comment",
+            "int y = 10;", "}" };
+    QTest::newRow("standartOneLineComment") << test_code << 2 << 12 << 3 << 0;
+
+    //№2. стандартный однострочный комментарий (в 2-3 строки)
+    test_code = { "int main()", "{",
+                 "int x = 5; // comment \\",
+                 "comment2 \\",
+                 "comment3 ",
+                 "int y = 10;",
+                 "}" };
+    QTest::newRow("onelineCommentInSeveralLine") << test_code << 2 << 12 << 5 << 0;
+
+    //№3. экранированный слэш в конце комментария
+    test_code = {"int main()", "{",
+                 "int x = 5; // comment \\\\\\\\",
+                 "int y = 10;",
+                 "}"};
+    QTest::newRow("escapedSlashInEndOfOnelineComment") << test_code << 2 << 12 << 4 << 0;
+    
+    //№4. пустой комментарий
+    test_code={"int main()","{",
+                 "int x = 5; //",
+                 "int y = 10;",
+                 "}"};
+    QTest::newRow("emptyOnelineComment") << test_code << 2 << 12 << 3 << 0;
+    
+    //№5. комментарий в конце кода
+    test_code = {"int main()","{",
+                 "int x = 5;",
+                 "}// comment" };
+    QTest::newRow("onelineCommentInEndOfCode") << test_code << 3 << 2 << 3 << 11;
 }
 
-void testskiponelinecomment::onelineCommentInSeveralLine() //№2. стандартный однострочный комментарий (в 2-3 строки)
+void testskiponelinecomment::add()
 {
-    QStringList code = {
-        "int main()",
-        "{",
-        "int x = 5; // comment \\",
-        "comment2 \\",
-        "comment3 ",
-        "int y = 10;",
-        "}"
-    };
-    int currentLine=2;
-    int currentPosition=12;
+    // объект тестируемого класса,чтобы было откуда вызывать методы
+    // изымает из таблицы данные в указанные переменные 
+    QFETCH(QStringList, code);
+    QFETCH(int, currentLine);
+    QFETCH(int, currentPosition);
+    QFETCH(int, exp_currentLine);
+    QFETCH(int, exp_currentPosition);
 
+    // Вызываем метод класса и сравниваем полученное значение с ожидаемым
     skipOneLineComment(code, currentLine, currentPosition);
-    QVERIFY2(currentLine==5, "Error in currentLine");
-    QVERIFY2(currentPosition==0, "Error in currentPosition");
-}
-
-void testskiponelinecomment::escapedSlashInEndOfOnelineComment() //№3. экранированный слэш в конце комментария
-{
-    QStringList code = {
-        "int main()",
-        "{",
-        "int x = 5; // comment \\\\\\\\",
-        "int y = 10;",
-        "}"
-    };
-    int currentLine=2;
-    int currentPosition=12;
-
-    skipOneLineComment(code, currentLine, currentPosition);
-    QVERIFY2(currentLine==4, "Error in currentLine");
-    QVERIFY2(currentPosition==0, "Error in currentPosition");
-}
-
-void testskiponelinecomment::emptyOnelineComment() //№4. пустой комментарий
-{
-    QStringList code = {
-        "int main()",
-        "{",
-        "int x = 5; //",
-        "int y = 10;",
-        "}"
-    };
-    int currentLine=2;
-    int currentPosition=12;
-
-    skipOneLineComment(code, currentLine, currentPosition);
-    QVERIFY2(currentLine==3, "Error in currentLine");
-    QVERIFY2(currentPosition==0, "Error in currentPosition");
-}
-
-void testskiponelinecomment::onelineCommentInEndOfCode() //№5. комментарий в конце кода
-{
-    QStringList code = {
-        "int main()",
-        "{",
-        "int x = 5;",
-        "}// comment"
-    };
-    int currentLine=3;
-    int currentPosition=2;
-
-    skipOneLineComment(code, currentLine, currentPosition);
-    QVERIFY2(currentLine==3, "Error in currentLine");
-    QVERIFY2(currentPosition==11, "Error in currentPosition");
+    QCOMPARE(currentLine, exp_currentLine);
+    QCOMPARE(currentPosition, exp_currentPosition);
 }

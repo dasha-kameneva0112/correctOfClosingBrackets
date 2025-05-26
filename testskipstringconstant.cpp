@@ -2,140 +2,98 @@
 
 testskipstringconstant::testskipstringconstant(QObject *parent) : QObject(parent) {}
 
-void testskipstringconstant::simpleClosingStringConst() //№1. простая строковая закрывающаяся константа
+void testskipstringconstant::add_data()
 {
-    QStringList code = {
+    // колонки параметры + ожидемый результат
+    QTest::addColumn<QStringList>("code");
+    QTest::addColumn<int>("currentLine");
+    QTest::addColumn<int>("currentPosition");
+    QTest::addColumn<bool>("resultofskipping");
+    QTest::addColumn<int>("exp_currentLine");
+    QTest::addColumn<int>("exp_currentPosition");
+
+    //Создаем строки‐тесты и заполняем таблицу данными
+    //№1. простая строковая закрывающаяся константа
+    QStringList test_code ={
         "int main()",
         "{",
         "QString a = \"Hello, world!\";",
-        "}"
-    };
-    int currentLine=2;
-    int currentPosition=12;
+        "}"  };
+    QTest::newRow("simpleClosingStringConst") << test_code << 2 << 12 << true << 2 << 26;
 
-    bool resultOfSkipping=skipStringConstant(code, currentLine, currentPosition);
-    QVERIFY2(resultOfSkipping==true, "Error in resultOfSkipping");
-    QVERIFY2(currentLine==2, "Error in currentLine");
-    QVERIFY2(currentPosition==26, "Error in currentPosition");
-}
-
-void testskipstringconstant::escapedQuotationMarkInsideStringConst() //№2. экранированная кавычка
-{
-    QStringList code = {
+    //№2. экранированная кавычка
+    test_code ={
         "int main()",
         "{",
         "QString a = \"Hello, \\\"world!\";",
-        "}"
-    };
-    int currentLine=2;
-    int currentPosition=12;
+        "}" };
+    QTest::newRow("escapedQuotationMarkInsideStringConst") << test_code << 2 << 12 << true << 2 << 28;
 
-    bool resultOfSkipping=skipStringConstant(code, currentLine, currentPosition);
-    QVERIFY2(resultOfSkipping==true, "Error in resultOfSkipping");
-    QVERIFY2(currentLine==2, "Error in currentLine");
-    QVERIFY2(currentPosition==28, "Error in currentPosition");
-}
-
-void testskipstringconstant::escapedSlashInsideStringConst() //№3. экранированный слэш
-{
-    QStringList code = {
+    //№3. экранированный слэш
+    test_code ={
         "int main()",
         "{",
         "QString a = \"Hello, world!\\\\\";",
-        "}"
-    };
-    int currentLine=2;
-    int currentPosition=12;
+        "}" };
+    QTest::newRow("escapedSlashInsideStringConst") << test_code << 2 << 12 << true << 2 << 28;
 
-    bool resultOfSkipping=skipStringConstant(code, currentLine, currentPosition);
-    QVERIFY2(resultOfSkipping==true, "Error in resultOfSkipping");
-    QVERIFY2(currentLine==2, "Error in currentLine");
-    QVERIFY2(currentPosition==28, "Error in currentPosition");
-}
-
-void testskipstringconstant::unclosedStringConst() //№4. незакрытая строковая константа
-{
-    QStringList code = {
+    //№4. незакрытая строковая константа
+    test_code = {
         "int main()",
         "{",
         "QString a = \"Hello, world! ;",
-        "}"
-    };
-    int currentLine=2;
-    int currentPosition=12;
+        "}" };
+    QTest::newRow("unclosedStringConst") << test_code << 2 << 12 << false << 2 << 12;
 
-    bool resultOfSkipping=skipStringConstant(code, currentLine, currentPosition);
-    QVERIFY2(resultOfSkipping==false, "Error in resultOfSkipping");
-    QVERIFY2(currentLine==2, "Error in currentLine");
-    QVERIFY2(currentPosition==12, "Error in currentPosition");
-}
-
-void testskipstringconstant::IncorrectEscapedQuotationMarkInsideStringConst() //№5. экранированная кавычка (ошибка)
-{
-    QStringList code = {
+    //№5. экранированная кавычка (ошибка)
+    test_code = {
         "int main()",
         "{",
         "QString a = \"Hello, world! \\\\\\\";",
-        "}"
-    };
-    int currentLine=2;
-    int currentPosition=12;
+        "}" };
+    QTest::newRow("IncorrectEscapedQuotationMarkInsideStringConst") << test_code << 2 << 12 << false << 2 << 12;
 
-    bool resultOfSkipping=skipStringConstant(code, currentLine, currentPosition);
-    QVERIFY2(resultOfSkipping==false, "Error in resultOfSkipping");
-    QVERIFY2(currentLine==2, "Error in currentLine");
-    QVERIFY2(currentPosition==12, "Error in currentPosition");
-}
-
-void testskipstringconstant::multilineStringConst() //№6. перенос строковой константы на другую строку
-{
-    QStringList code = {
+    //№6. перенос строковой константы на другую строку
+    test_code ={
         "int main()",
         "{",
         "QString a = \"Hello, \\",
         "world!\";",
-        "}"
-    };
-    int currentLine=2;
-    int currentPosition=12;
+        "}" };
+    QTest::newRow("multilineStringConst") << test_code << 2 << 12 << true << 3 << 6;
 
-    bool resultOfSkipping=skipStringConstant(code, currentLine, currentPosition);
-    QVERIFY2(resultOfSkipping==true, "Error in resultOfSkipping");
-    QVERIFY2(currentLine==3, "Error in currentLine");
-    QVERIFY2(currentPosition==6, "Error in currentPosition");
-}
-
-void testskipstringconstant::emptyStringConst() //№7. пустая строковая константа
-{
-    QStringList code = {
+    //№7. пустая строковая константа
+    test_code = {
         "int main()",
         "{",
         "QString a = \"\";",
-        "}"
-    };
-    int currentLine=2;
-    int currentPosition=12;
+        "}"  };
+    QTest::newRow("emptyStringConst") << test_code << 2 << 12 << true << 2 << 13;
 
-    bool resultOfSkipping=skipStringConstant(code, currentLine, currentPosition);
-    QVERIFY2(resultOfSkipping==true, "Error in resultOfSkipping");
-    QVERIFY2(currentLine==2, "Error in currentLine");
-    QVERIFY2(currentPosition==13, "Error in currentPosition");
-}
-
-void testskipstringconstant::incorrectMultilineStringConst() //№8. перенос строковой константы без слэша (ошибка)
-{
-    QStringList code = {
+    //№8. перенос строковой константы без слэша (ошибка)
+    test_code = {
         "int main()",
         "{",
         "QString a = \"Hello, ",
         "world!\";",
-        "}"
-    };
-    int currentLine=2;
-    int currentPosition=12;
+        "}" };
+    QTest::newRow("incorrectMultilineStringConst") << test_code << 2 << 12 << false << 2 << 12;
+}
 
-    bool resultOfSkipping=skipStringConstant(code, currentLine, currentPosition);
-    QVERIFY2(resultOfSkipping==false, "Error in resultOfSkipping");
-    QVERIFY2(currentLine==2, "Error in currentLine");
-    QVERIFY2(currentPosition==12, "Error in currentPosition");
+void testskipstringconstant::add()
+{
+    // объект тестируемого класса,чтобы было откуда вызывать методы
+    // изымает из таблицы данные в указанные переменные
+    QFETCH(QStringList, code);
+    QFETCH(int, currentLine);
+    QFETCH(int, currentPosition);
+    QFETCH(bool, resultofskipping);
+    QFETCH(int, exp_currentLine);
+    QFETCH(int, exp_currentPosition);
+
+    // Вызываем метод класса и сравниваем полученное значение с ожидаемым
+    bool result = skipStringConstant(code, currentLine, currentPosition);
+    QCOMPARE(result, resultofskipping);
+    QCOMPARE(currentLine, exp_currentLine);
+    QCOMPARE(currentPosition, exp_currentPosition);
 }

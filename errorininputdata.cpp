@@ -33,3 +33,12 @@ int errorininputdata::getLine() const
 
 int errorininputdata::getPosition() const
 {    return this->positionOfError; }
+
+void errorininputdata::setType(ErrorsInInputDataType new_type)
+{    type=new_type;}
+
+void errorininputdata::setLine(int line)
+{    numberOfLine=line;}
+
+void errorininputdata::setPos(int pos)
+{    positionOfError=pos;}

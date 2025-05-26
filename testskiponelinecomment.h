@@ -3,19 +3,14 @@
 #include <QObject>
 #include "main.h"
 
-class testskiponelinecomment : public QObject
+class testskiponelinecomment : public QObject //Наследование от QObject
 {
     Q_OBJECT //Обязательный макрос
 public:
     testskiponelinecomment(QObject *parent = nullptr);
 private slots:
-    void standartOneLineComment(); //№1. стандартный однострочный комментарий (в конце строки)
-    void onelineCommentInSeveralLine(); //№2. стандартный однострочный комментарий (в 2-3 строки)
-    void escapedSlashInEndOfOnelineComment(); //№3. экранированный слэш в конце комментария
-    void emptyOnelineComment(); //№4. пустой комментарий
-    void onelineCommentInEndOfCode(); //№5. комментарий в конце кода
-
+    void add_data(); //В этом слоте создается таблица данных
+    void add(); //  слот за изъятие данных из таблицы и передачу их в тестируемый метод
 };
 
 #endif // TESTSKIPONELINECOMMENT_H
-

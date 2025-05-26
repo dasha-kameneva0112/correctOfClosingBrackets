@@ -9,12 +9,8 @@ class testskipcharconstant : public QObject
 public:
     explicit testskipcharconstant(QObject *parent = nullptr);
 private slots:
-    void simpleClosingCharConst(); //№1. простая символьная константа
-    void escapedQuotationMarkInsideCharConst(); //№2. экранированная кавычка
-    void unclosedCharConst(); //№3. незакрытая константа
-    void emptyCharConst(); //№4. пустая константа
-    void escapedSlashInsideCharConst(); //№5. экранированный слэш
-    void incorrectEscapedSlashInsideCharConst(); //№6. неправильное экранирование слэша (ошибка)
+    void add_data(); //В этом слоте создается таблица данных
+    void add(); //  слот за изъятие данных из таблицы и передачу их в тестируемый метод
 };
 
 #endif // TESTSKIPCHARCONSTANT_H

@@ -3,171 +3,110 @@
 
 testfindnextbracket::testfindnextbracket(QObject *parent) : QObject(parent) {}
 
-void testfindnextbracket::findBracketInBeginOfCode() //№1. нахождение скобки с начала кода
+void complexTest(); //№9. комплексный тест - комбинация комментариев и констант
+void bracketIsNotFound(); //№10. скобка не найдена
+
+void testfindnextbracket::add_data()
 {
-    QStringList code = {
+    // колонки параметры + ожидемый результат
+    QTest::addColumn<QStringList>("code");
+    QTest::addColumn<int>("startLine");
+    QTest::addColumn<int>("startPosition");
+    QTest::addColumn<errorininputdata>("error");
+    QTest::addColumn<int>("bracketisfound");
+    QTest::addColumn<int>("exp_startLine");
+    QTest::addColumn<int>("exp_startPosition");
+    QTest::addColumn<errorininputdata>("exp_error");
+
+    //Создаем строки‐тесты и заполняем таблицу данными
+    //№1. нахождение скобки с начала кода
+    QStringList test_code ={
         "int main()",
         "{",
         "int x = (5 + 3);",
-        "}"
-    };
-    int startLine=0;
-    int startPosition=0;
+        "}" };
+    errorininputdata error;
     errorininputdata newError;
+    QTest::newRow("findBracketInBeginOfCode") << test_code << 0 << 0 << error << 1 << 0 << 8 << newError;
 
-    int bracketIsFound=findNextBracket(code, startLine, startPosition, newError);
-    QVERIFY2(bracketIsFound==1, "Error in bracketIsFound");
-    QVERIFY2(startLine==0, "Error in startLine");
-    QVERIFY2(startPosition==8, "Error in startPosition");
-    QVERIFY2(newError.getType()==NULL, "Error in type of error");
-}
-
-void testfindnextbracket::skipOnelineCommentInCode() //№2. пропуск однострочного комментария
-{
-    QStringList code = {
+    //№2. пропуск однострочного комментария
+    test_code = {
         "// comment (",
         "int main()",
         "{",
         "int x = (5 + 3);",
-        "}"
-    };
-    int startLine=0;
-    int startPosition=0;
-    errorininputdata newError;
+        "}" };
+    QTest::newRow("skipOnelineCommentInCode") << test_code << 0 << 0 << error << 1 << 1 << 8 << newError;
 
-    int bracketIsFound=findNextBracket(code, startLine, startPosition, newError);
-    QVERIFY2(bracketIsFound==1, "Error in bracketIsFound");
-    QVERIFY2(startLine==1, "Error in startLine");
-    QVERIFY2(startPosition==8, "Error in startPosition");
-    QVERIFY2(newError.getType()==NULL, "Error in type of error");
-}
-
-void testfindnextbracket::skipIncorrectOnelineCommentInCode() //№3. пропуск многострочного комментария (без ошибки)
-{
-    QStringList code = {
+    //№3. пропуск многострочного комментария (без ошибки)
+    test_code = {
         "/\* (comment ",
         "comment2] \*/",
         "int main()",
         "{",
         "int x = (5 + 3);",
-        "}"
-    };
-    int startLine=0;
-    int startPosition=0;
-    errorininputdata newError;
+        "}" };
+    QTest::newRow("skipMultilineCommentInCode") << test_code << 0 << 0 << error << 1 << 2 << 8 << newError;
 
-    int bracketIsFound=findNextBracket(code, startLine, startPosition, newError);
-    QVERIFY2(bracketIsFound==1, "Error in bracketIsFound");
-    QVERIFY2(startLine==2, "Error in startLine");
-    QVERIFY2(startPosition==8, "Error in startPosition");
-    QVERIFY2(newError.getType()==NULL, "Error in type of error");
-}
-
-void testfindnextbracket::skipMultilineCommentInCode() //№4. пропуск многострочного комментария (с ошибкой)
-{
-    QStringList code = {
+    //№4. пропуск многострочного комментария (с ошибкой)
+    test_code = {
         "/\* comment ",
         "int main()",
         "{",
         "int x = (5 + 3);",
-        "}"
-    };
-    int startLine=0;
-    int startPosition=0;
-    errorininputdata newError;
+        "}" };
+    newError.setType(UnclosedMultilineComment);
+    newError.setLine(0);
+    newError.setPos(1);
+    QTest::newRow("skipIncorrectMultilineCommentInCode") << test_code << 0 << 0 << error << -1 << 0 << 1 << newError;
 
-    int bracketIsFound=findNextBracket(code, startLine, startPosition, newError);
-    QVERIFY2(bracketIsFound==-1, "Error in bracketIsFound");
-    QVERIFY2(startLine==4, "Error in startLine");
-    QVERIFY2(startPosition==0, "Error in startPosition");
-    QVERIFY2(newError.getType()==UnclosedMultilineComment, "Error in type of error");
-    QVERIFY2(newError.getLine()==0, "Error in number of error's line");
-    QVERIFY2(newError.getPosition()==2, "Error in error's position");
-}
-
-void testfindnextbracket::skipIncorrectMultilineCommentInCode() //№5. пропуск строковой константы (без ошибки)
-{
-    QStringList code = {
+    //№5. пропуск строковой константы (без ошибки)
+    test_code = {
         "int main()",
         "{",
         "QString a = \"Hello, [world]]!\";",
-        "}"
-    };
-    int startLine=2;
-    int startPosition=0;
-    errorininputdata newError;
+        "}" };
+    newError.setType(NoError);
+    newError.setLine(-1);
+    newError.setPos(-1);
+    QTest::newRow("skipStringConstantInCode") << test_code << 2 << 0 << error << 1 << 3 << 0 << newError;
 
-    int bracketIsFound=findNextBracket(code, startLine, startPosition, newError);
-    QVERIFY2(bracketIsFound==1, "Error in bracketIsFound");
-    QVERIFY2(startLine==3, "Error in startLine");
-    QVERIFY2(startPosition==0, "Error in startPosition");
-    QVERIFY2(newError.getType()==NULL, "Error in type of error");
-}
-
-void testfindnextbracket::skipStringConstantInCode() //№6. пропуск строковой константы (с ошибкой)
-{
-    QStringList code = {
+    //№6. пропуск строковой константы (с ошибкой)
+    test_code = {
         "int main()",
         "{",
         "QString a = \"Hello, [world]]! ;",
-        "}"
-    };
-    int startLine=2;
-    int startPosition=0;
-    errorininputdata newError;
+        "}" };
+    newError.setType(UnclosedStringConst);
+    newError.setLine(2);
+    newError.setPos(12);
+    QTest::newRow("skipIncorrectStringConstantInCode") << test_code << 2 << 0 << error << -1 << 2 << 12 << newError;
 
-    int bracketIsFound=findNextBracket(code, startLine, startPosition, newError);
-    QVERIFY2(bracketIsFound==-1, "Error in bracketIsFound");
-    QVERIFY2(startLine==2, "Error in startLine");
-    QVERIFY2(startPosition==27, "Error in startPosition");
-    QVERIFY2(newError.getType()==UnclosedStringConst, "Error in type of error");
-    QVERIFY2(newError.getLine()==2, "Error in number of error's line");
-    QVERIFY2(newError.getPosition()==12, "Error in error's position");
-}
-
-void testfindnextbracket::skipIncorrectStringConstantInCode() //№7. пропуск символьной коснтанты (без ошибки)
-{
-    QStringList code = {
+    //№7. пропуск символьной коснтанты (без ошибки)
+    test_code = {
         "int main()",
         "{",
         "char a = \'(\';",
-        "}"
-    };
-    int startLine=2;
-    int startPosition=0;
-    errorininputdata newError;
+        "}" };
+    newError.setType(NoError);
+    newError.setLine(-1);
+    newError.setPos(-1);
+    QTest::newRow("skipCharConstantInCode") << test_code << 2 << 0 << error << 1 << 3 << 0 << newError;
 
-    int bracketIsFound=findNextBracket(code, startLine, startPosition, newError);
-    QVERIFY2(bracketIsFound==1, "Error in bracketIsFound");
-    QVERIFY2(startLine==3, "Error in startLine");
-    QVERIFY2(startPosition==0, "Error in startPosition");
-    QVERIFY2(newError.getType()==NULL, "Error in type of error");
-}
-
-void testfindnextbracket::skipCharConstantInCode() //№8. пропуск символьной константы (с ошибкой)
-{
-    QStringList code = {
+    //№8. пропуск символьной константы (с ошибкой)
+    test_code={
         "int main()",
         "{",
         "char a = \'( ;",
         "}"
     };
-    int startLine=2;
-    int startPosition=0;
-    errorininputdata newError;
+    newError.setType(UnclosedCharConst);
+    newError.setLine(2);
+    newError.setPos(9);
+    QTest::newRow("skipIncorrectCharConstantInCode") << test_code << 2 << 0 << error << -1 << 2 << 9 << newError;
 
-    int bracketIsFound=findNextBracket(code, startLine, startPosition, newError);
-    QVERIFY2(bracketIsFound==-1, "Error in bracketIsFound");
-    QVERIFY2(startLine==2, "Error in startLine");
-    QVERIFY2(startPosition==11, "Error in startPosition");
-    QVERIFY2(newError.getType()==UnclosedCharConst, "Error in type of error");
-    QVERIFY2(newError.getLine()==2, "Error in number of error's line");
-    QVERIFY2(newError.getPosition()==9, "Error in error's position");
-}
-
-void testfindnextbracket::skipIncorrectCharConstantInCode() //№9. комплексный тест - комбинация комментариев и констант
-{
-    QStringList code = {
+    //№9. комплексный тест - комбинация комментариев и констант
+    test_code = {
         "int main()",
         "{",
         "// comment",
@@ -178,27 +117,35 @@ void testfindnextbracket::skipIncorrectCharConstantInCode() //№9. компле
         "int x = (5+3);",
         "}"
     };
-    int startLine=2;
-    int startPosition=0;
-    errorininputdata newError;
+    newError.setType(NoError);
+    newError.setLine(-1);
+    newError.setPos(-1);
+    QTest::newRow("complexTest") << test_code << 2 << 0 << error << 1 << 7 << 8 << newError;
 
-    int bracketIsFound=findNextBracket(code, startLine, startPosition, newError);
-    QVERIFY2(bracketIsFound==1, "Error in bracketIsFound");
-    QVERIFY2(startLine==7, "Error in startLine");
-    QVERIFY2(startPosition==8, "Error in startPosition");
-    QVERIFY2(newError.getType()==NULL, "Error in type of error");
+    //№10. скобка не найдена
+    test_code = { "int x = 5 + 3;" };
+    QTest::newRow("notFoundBracket") << test_code << 0 << 0 << error << 0 << 0 << 13 << newError;
 }
 
-void testfindnextbracket::bracketIsNotFound() //№10. скобка не найдена
+void testfindnextbracket::add()
 {
-    QStringList code = { "int x = 5 + 3;" };
-    int startLine=0;
-    int startPosition=0;
-    errorininputdata newError;
+    // объект тестируемого класса,чтобы было откуда вызывать методы
+    // изымает из таблицы данные в указанные переменные
+    QFETCH(QStringList, code);
+    QFETCH(int, startLine);
+    QFETCH(int, startPosition);
+    QFETCH(errorininputdata, error);
+    QFETCH(int, bracketisfound);
+    QFETCH(int, exp_startLine);
+    QFETCH(int, exp_startPosition);
+    QFETCH(errorininputdata, exp_error);
 
-    int bracketIsFound=findNextBracket(code, startLine, startPosition, newError);
-    QVERIFY2(bracketIsFound==0, "Error in bracketIsFound");
-    QVERIFY2(startLine==0, "Error in startLine");
-    QVERIFY2(startPosition==12, "Error in startPosition");
-    QVERIFY2(newError.getType()==NULL, "Error in type of error");
+    // Вызываем метод класса и сравниваем полученное значение с ожидаемым
+    int result = findNextBracket(code, startLine, startPosition, error);
+    QCOMPARE(result, bracketisfound);
+    QCOMPARE(startLine, exp_startLine);
+    QCOMPARE(startPosition, exp_startPosition);
+    QCOMPARE(error.getType(), exp_error.getType());
+    QCOMPARE(error.getLine(), exp_error.getLine());
+    QCOMPARE(error.getPosition(), exp_error.getPosition());
 }

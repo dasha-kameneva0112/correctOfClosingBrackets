@@ -2,104 +2,83 @@
 
 testskipcharconstant::testskipcharconstant(QObject *parent) : QObject(parent) {}
 
-void testskipcharconstant::simpleClosingCharConst() //№1. простая символьная константа
+void testskipcharconstant::add_data()
 {
-    QStringList code = {
+    // колонки параметры + ожидемый результат
+    QTest::addColumn<QStringList>("code");
+    QTest::addColumn<int>("currentLine");
+    QTest::addColumn<int>("currentPosition");
+    QTest::addColumn<bool>("resultofskipping");
+    QTest::addColumn<int>("exp_currentLine");
+    QTest::addColumn<int>("exp_currentPosition");
+
+    //Создаем строки‐тесты и заполняем таблицу данными
+    //№1. простая символьная константа
+    QStringList test_code ={
         "int main()",
         "{",
         "char a = \'H\';",
         "}"
     };
-    int currentLine=2;
-    int currentPosition=9;
+    QTest::newRow("simpleClosingCharConst") << test_code << 2 << 9 << true << 2 << 11;
 
-    bool resultOfSkipping=skipStringConstant(code, currentLine, currentPosition);
-    QVERIFY2(resultOfSkipping==true, "Error in resultOfSkipping");
-    QVERIFY2(currentLine==2, "Error in currentLine");
-    QVERIFY2(currentPosition==11, "Error in currentPosition");
-}
-
-void testskipcharconstant::escapedQuotationMarkInsideCharConst() //№2. экранированная кавычка
-{
-    QStringList code = {
+    //№2. экранированная кавычка
+    test_code ={
         "int main()",
         "{",
         "char a = \'\\\'\';",
         "}"
     };
-    int currentLine=2;
-    int currentPosition=9;
+    QTest::newRow("escapedQuotationMarkInsideCharConst") << test_code << 2 << 9 << true << 2 << 12;
 
-    bool resultOfSkipping=skipStringConstant(code, currentLine, currentPosition);
-    QVERIFY2(resultOfSkipping==true, "Error in resultOfSkipping");
-    QVERIFY2(currentLine==2, "Error in currentLine");
-    QVERIFY2(currentPosition==12, "Error in currentPosition");
-}
-
-void testskipcharconstant::unclosedCharConst() //№3. незакрытая константа
-{
-    QStringList code = {
+    //№3. незакрытая константа
+    test_code ={
         "int main()",
         "{",
         "char a = \'H;",
-        "}"
-    };
-    int currentLine=2;
-    int currentPosition=9;
+        "}" };
+    QTest::newRow("unclosedCharConst") << test_code << 2 << 9 << false << 2 << 9;
 
-    bool resultOfSkipping=skipStringConstant(code, currentLine, currentPosition);
-    QVERIFY2(resultOfSkipping==false, "Error in resultOfSkipping");
-    QVERIFY2(currentLine==2, "Error in currentLine");
-    QVERIFY2(currentPosition==9, "Error in currentPosition");
-}
-
-void testskipcharconstant::emptyCharConst() //№4. пустая константа
-{
-    QStringList code = {
+    //№4. пустая константа
+    test_code ={
         "int main()",
         "{",
         "char a = \'\';",
-        "}"
-    };
-    int currentLine=2;
-    int currentPosition=9;
+        "}"  };
+    QTest::newRow("emptyCharConst") << test_code << 2 << 9 << true << 2 << 10;
 
-    bool resultOfSkipping=skipStringConstant(code, currentLine, currentPosition);
-    QVERIFY2(resultOfSkipping==true, "Error in resultOfSkipping");
-    QVERIFY2(currentLine==2, "Error in currentLine");
-    QVERIFY2(currentPosition==10, "Error in currentPosition");
-}
-
-void testskipcharconstant::escapedSlashInsideCharConst() //№5. экранированный слэш
-{
-    QStringList code = {
+    //№5. экранированный слэш
+    test_code ={
         "int main()",
         "{",
         "char a = \'\\\\\';",
-        "}"
-    };
-    int currentLine=2;
-    int currentPosition=9;
+        "}" };
+    QTest::newRow("escapedSlashInsideCharConst") << test_code << 2 << 9 << true << 2 << 12;
 
-    bool resultOfSkipping=skipStringConstant(code, currentLine, currentPosition);
-    QVERIFY2(resultOfSkipping==true, "Error in resultOfSkipping");
-    QVERIFY2(currentLine==2, "Error in currentLine");
-    QVERIFY2(currentPosition==12, "Error in currentPosition");
-}
-
-void testskipcharconstant::incorrectEscapedSlashInsideCharConst() //№6. неправильное экранирование слэша (ошибка)
-{
-    QStringList code = {
+    //№6. неправильное экранирование слэша (ошибка)
+    test_code ={
         "int main()",
         "{",
         "char a = \'\\\';",
-        "}"
-    };
-    int currentLine=2;
-    int currentPosition=9;
+        "}" };
+    QTest::newRow("incorrectEscapedSlashInsideCharConst") << test_code << 2 << 9 << false << 2 << 9;
+}
 
-    bool resultOfSkipping=skipStringConstant(code, currentLine, currentPosition);
-    QVERIFY2(resultOfSkipping==false, "Error in resultOfSkipping");
-    QVERIFY2(currentLine==2, "Error in currentLine");
-    QVERIFY2(currentPosition==9, "Error in currentPosition");
+
+void testskipcharconstant::add()
+{
+    // объект тестируемого класса,чтобы было откуда вызывать методы
+    // изымает из таблицы данные в указанные переменные
+    QFETCH(QStringList, code);
+    QFETCH(int, currentLine);
+    QFETCH(int, currentPosition);
+    QFETCH(bool, resultofskipping);
+    QFETCH(int, exp_currentLine);
+    QFETCH(int, exp_currentPosition);
+
+    // Вызываем метод класса и сравниваем полученное значение с ожидаемым
+    bool result = skipCharConstant(code, currentLine, currentPosition);
+    QCOMPARE(result, resultofskipping);
+    QCOMPARE(currentLine, exp_currentLine);
+    QCOMPARE(currentPosition, exp_currentPosition);
 }

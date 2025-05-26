@@ -2,6 +2,7 @@
 #define ERRORININPUTDATA_H
 
 enum ErrorsInInputDataType {
+    NoError,
     NoAccessToInputFile,
     NoAccessToOutputFile,
     EmptyInputFile,
@@ -23,11 +24,20 @@ public:
     ErrorsInInputDataType getType() const;
     int getLine() const;
     int getPosition() const;
+    void setType(ErrorsInInputDataType new_type);
+    void setLine(int line);
+    void setPos(int pos);
+
+    bool operator==(const errorininputdata& other) const
+    {
+        return (type == other.type && numberOfLine == other.numberOfLine &&
+                positionOfError == other.positionOfError);
+    }
 
 private:
-    ErrorsInInputDataType type;
-    int numberOfLine;
-    int positionOfError;
+    ErrorsInInputDataType type=NoError;
+    int numberOfLine=-1;
+    int positionOfError=-1;
 };
 
 #endif // ERRORININPUTDATA_H

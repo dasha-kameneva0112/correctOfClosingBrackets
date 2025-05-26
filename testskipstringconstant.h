@@ -3,21 +3,24 @@
 #include <QObject>
 #include "main.h"
 
-
 class testskipstringconstant : public QObject
 {
     Q_OBJECT //Обязательный макрос
 public:
-    testskipstringconstant();
+    explicit testskipstringconstant(QObject *parent = nullptr);
+
 private slots:
-    void simpleStringConst(); // №1. Простая строковая константа
-    //void (); // №2. Экранированная кавычка (правильно) внутри константы
-    //void (); // №3. Экранированный слэш (правильно)
-    void unclosingConst(); // №4. Незакрытая строковая константа
-    void incorrect(); // №5. Экранированная кавычка (неправильно)
-    void MultilineConst(); // №6. Многострочная константа
-    void emptyConst(); // №7. Пустая константа
-    void incorrectTransfer(); // №8. Неправильный перенос на другую строку
+    void simpleClosingStringConst(); //№1. простая строковая закрывающаяся константа
+    void escapedQuotationMarkInsideStringConst(); //№2. экранированная кавычка
+    void escapedSlashInsideStringConst(); //№3. экранированный слэш
+    void unclosedStringConst(); //№4. незакрытая строковая константа
+    void IncorrectEscapedQuotationMarkInsideStringConst(); //№5. экранированная кавычка (ошибка)
+    void multilineStringConst(); //№6. перенос строковой константы на другую строку
+    void emptyStringConst(); //№7. пустая строковая константа
+    void incorrectMultilineStringConst(); //№8. перенос строковой константы без слэша (ошибка)
+
 };
+
+
 
 #endif // TESTSKIPSTRINGCONSTANT_H

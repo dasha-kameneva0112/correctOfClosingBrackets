@@ -9,6 +9,9 @@ class testupdateconteinerofbrackets : public QObject
 public:
     explicit testupdateconteinerofbrackets(QObject *parent = nullptr);
 private slots:
+    void add_data();
+    void add();
+    /*
     void addOpeningBracket(); // №1. Добавление открывающей скобки
     void addCorrectCLosingBracket(); // №2. Добавление закрывающей скобки (без ошибок)
     void addExcessiveClosingBracket(); // №3. Добавление закрывающей скобки (ошибка - нет пары, лишняя закрывающая)
@@ -19,6 +22,7 @@ private slots:
     void addMistakeIncorrectOrder(); // №5.4. Добавление ошибки неправильного порядка (порядок уже изменен)
     void addMistakeInNotEmptyConteiner(); // №6. Добавление ошибки в непустой контейнер
     void complexTest(); // №7. Корректная вложенность
+*/
 };
 
 #endif // TESTUPDATECONTEINEROFBRACKETS_H

@@ -26,172 +26,178 @@ void testupdateconteinerofbrackets::add_data()
     QSet<mistake> exp_mistakes;
     QTest::newRow("addOpeningBracket") << newBracket1 << brackets << mistakes << 0 << exp_brackets << exp_mistakes;
 
+
+    exp_brackets.clear();
+
+
     // №2. Добавление закрывающей скобки (без ошибок)
-    code = {") ("};
-    bracket newBracket2(code, 0, 0);
-    brackets.push(bracket(code, 0, 2));
+    QStringList code_2 = {")"};
+    bracket newBracket2(code_2, 0, 0);
 
-    exp_brackets.pop(); // exp_brackets и exp_mistakes пустые
-
+    QStringList code2 = {"("};
+    brackets.push(bracket(code2, 0, 0));
     QTest::newRow("addCorrectCLosingBracket") << newBracket2 << brackets << mistakes << 0 << exp_brackets << exp_mistakes;
 
-    brackets.pop();
+
+    brackets.clear();
+
 
     // №3. Добавление закрывающей скобки (ошибка - нет пары, лишняя закрывающая)
-    code = {") { ["};
-    bracket newBracket3(code, 0, 0);
+    QStringList code_3 = {")"};
+    bracket newBracket3(code_3, 0, 0);
 
-    brackets.push(bracket(code, 0, 2));
-    brackets.push(bracket(code, 0, 4));
+    QStringList code3 = {"{ ["};
+    brackets.push(bracket(code3, 0, 0));
+    brackets.push(bracket(code3, 0, 2));
 
-    exp_brackets.push(bracket(code, 0, 2));
-    exp_brackets.push(bracket(code, 0, 4));
-    exp_mistakes.insert(mistake(bracket(code,0,0), ExcessiveClosingBracket));
+    exp_brackets.push(bracket(code3, 0, 0));
+    exp_brackets.push(bracket(code3, 0, 2));
+    exp_mistakes.insert(mistake(newBracket3, ExcessiveClosingBracket));
 
     QTest::newRow("addExcessiveClosingBracket") << newBracket3 << brackets << mistakes << 1 << exp_brackets << exp_mistakes;
 
-    brackets.pop();
-    brackets.pop();
-    exp_brackets.pop();
-    exp_brackets.pop();
+
+    brackets.clear();
+    exp_brackets.clear();
     exp_mistakes.clear();
+
 
     // №4. Добавление закрывающей скобки в пустой контейнер (ошибка - нет пары, лишняя закрывающая)
-    code = {")"};
-    bracket newBracket4(code, 0, 0);
-
-    exp_mistakes.insert(mistake(bracket(code,0,0), ExcessiveClosingBracket));
-
+    QStringList code4 = {")"};
+    bracket newBracket4(code4, 0, 0);
+    exp_mistakes.insert(mistake(bracket(code4,0,0), ExcessiveClosingBracket));
     QTest::newRow("addClosingBracketInEmptyContainer") << newBracket4 << brackets << mistakes << 1 << exp_brackets << exp_mistakes;
+
 
     exp_mistakes.clear();
 
+
     // №5.1. Неправильный порядок с предыдущей (одной)
-    code = {") ( ["};
-    bracket newBracket5(code, 0, 0);
+    QStringList code_5 = {")"};
+    bracket newBracket5(code_5, 0, 0);
 
-    brackets.push(bracket(code, 0, 2));
-    brackets.push(bracket(code, 0, 4));
+    QStringList code5 = {"( ["};
+    brackets.push(bracket(code5, 0, 0));
+    brackets.push(bracket(code5, 0, 2));
 
-    bracket currentBr(bracket(code, 0, 4));
-    currentBr.setOrder(false);
+    bracket currentBr(bracket(code5, 0, 2, false));
     exp_brackets.push(currentBr);
-
     QTest::newRow("incorrectOrderWithOneBracket") << newBracket5 << brackets << mistakes << 0 << exp_brackets << exp_mistakes;
 
-    brackets.pop();
-    brackets.pop();
-    exp_brackets.pop();
+
+    brackets.clear();
+    exp_brackets.clear();
+
 
     // №5.2. Неправильный порядок с 3-4 всеми предыдущими
-    code = {") ( [ [ {"};
-    bracket newBracket6(code, 0, 0);
-    brackets.push(bracket(code, 0, 2));
-    brackets.push(bracket(code, 0, 4));
-    brackets.push(bracket(code, 0, 6));
-    brackets.push(bracket(code, 0, 8));
+    QStringList code_6 = {")"};
+    bracket newBracket6(code_6, 0, 0);
 
-    bracket currentBr1(bracket(code, 0, 4));
-    currentBr1.setOrder(false);
+    QStringList code6 = {"( [ [ {"};
+    brackets.push(bracket(code6, 0, 0));
+    brackets.push(bracket(code6, 0, 2));
+    brackets.push(bracket(code6, 0, 4));
+    brackets.push(bracket(code6, 0, 6));
+
+    bracket currentBr1(bracket(code6, 0, 2, false));
     exp_brackets.push(currentBr1);
-    bracket currentBr2(bracket(code, 0, 6));
-    currentBr2.setOrder(false);
+    bracket currentBr2(bracket(code6, 0, 4, false));
     exp_brackets.push(currentBr2);
-    bracket currentBr3(bracket(code, 0, 8));
-    currentBr3.setOrder(false);
+    bracket currentBr3(bracket(code6, 0, 6, false));
     exp_brackets.push(currentBr3);
-
     QTest::newRow("incorrectOrderWithAllBrackets") << newBracket6 << brackets << mistakes << 0 << exp_brackets << exp_mistakes;
 
-    brackets.pop();
-    brackets.pop();
-    brackets.pop();
-    brackets.pop();
-    exp_brackets.pop();
-    exp_brackets.pop();
-    exp_brackets.pop();
+
+    brackets.clear();
+    exp_brackets.clear();
+
 
     // №5.3. Неправильный порядок с 3-4 предыдущими (не всеми)
-    code = {") [ { ( [ [ {"};
-    bracket newBracket7(code, 0, 0);
-    brackets.push(bracket(code, 0, 2));
-    brackets.push(bracket(code, 0, 4));
-    brackets.push(bracket(code, 0, 6));
-    brackets.push(bracket(code, 0, 8));
-    brackets.push(bracket(code, 0, 10));
-    brackets.push(bracket(code, 0, 12));
+    QStringList code_7 = {")"};
+    bracket newBracket7(code_7, 0, 0);
 
-    bracket currentBr4(bracket(code, 0, 2));
+    QStringList code7 = {"[ { ( [ [ {"};
+    brackets.push(bracket(code7, 0, 0));
+    brackets.push(bracket(code7, 0, 2));
+    brackets.push(bracket(code7, 0, 4));
+    brackets.push(bracket(code7, 0, 6));
+    brackets.push(bracket(code7, 0, 8));
+    brackets.push(bracket(code7, 0, 10));
+
+    bracket currentBr4(bracket(code7, 0, 0));
     exp_brackets.push(currentBr4);
-    bracket currentBr5(bracket(code, 0, 4));
+    bracket currentBr5(bracket(code7, 0, 2));
     exp_brackets.push(currentBr5);
-    bracket currentBr6(bracket(code, 0, 8));
-    currentBr6.setOrder(false);
+    bracket currentBr6(bracket(code7, 0, 6, false));
     exp_brackets.push(currentBr6);
-    bracket currentBr7(bracket(code, 0, 10));
-    currentBr7.setOrder(false);
+    bracket currentBr7(bracket(code7, 0, 8, false));
     exp_brackets.push(currentBr7);
-    bracket currentBr8(bracket(code, 0, 12));
-    currentBr8.setOrder(false);
+    bracket currentBr8(bracket(code7, 0, 10, false));
     exp_brackets.push(currentBr8);
     QTest::newRow("incorrectOrderWithSeveralBrackets") << newBracket7 << brackets << mistakes << 0 << exp_brackets << exp_mistakes;
 
-    for(int i=0; i<6; i++)
-        brackets.pop();
-    for(int i=0; i<5; i++)
-        exp_brackets.pop();
+
+    brackets.clear();
+    exp_brackets.clear();
+
 
     // №5.4. Добавление ошибки неправильного порядка (порядок уже изменен)
-    code = {"] ["};
-    bracket newBracket8(code, 0, 0);
+    QStringList code_8 = {"]"};
+    bracket newBracket8(code_8, 0, 0);
 
-    bracket current_bracket(code, 0, 2);
-    current_bracket.setOrder(false);
+    QStringList code8 = {"["};
+    bracket current_bracket(code8, 0, 0, false);
     brackets.push(current_bracket);
 
-    exp_mistakes.insert(mistake(bracket(code,0,0), IncorrectOrderOfBrackets));
+    exp_mistakes.insert(mistake(newBracket8, IncorrectOrderOfBrackets));
     QTest::newRow("addMistakeIncorrectOrder") << newBracket8 << brackets << mistakes << 1 << exp_brackets << exp_mistakes;
 
-    brackets.pop();
+
+    brackets.clear();
     exp_mistakes.clear();
 
+
     // №6. Добавление ошибки в непустой контейнер
-    code = {"] { { )"};
-    bracket newBracket9(code, 0, 0);
+    QStringList code_9 = {"]"};
+    bracket newBracket9(code_9, 0, 0);
 
-    brackets.push(bracket(code, 0, 2));
-    brackets.push(bracket(code, 0, 4));
+    QStringList code9 = {"{ { )"};
+    brackets.push(bracket(code9, 0, 0));
+    brackets.push(bracket(code9, 0, 2));
 
-    bracket current_bracket1(code, 0, 6);
+    bracket current_bracket1(code9, 0, 4);
     mistake current_mistake(current_bracket1, ExcessiveClosingBracket);
     mistakes.insert(current_mistake);
 
-    exp_brackets.push(bracket(code, 0, 2));
-    exp_brackets.push(bracket(code, 0, 4));
+    exp_brackets.push(bracket(code9, 0, 0));
+    exp_brackets.push(bracket(code9, 0, 2));
 
     exp_mistakes.insert(current_mistake);
-    exp_mistakes.insert(mistake(bracket(code,0,0), ExcessiveClosingBracket));
-
+    exp_mistakes.insert(mistake(newBracket9, ExcessiveClosingBracket));
     QTest::newRow("addMistakeInNotEmptyConteiner") << newBracket9 << brackets << mistakes << 1 << exp_brackets << exp_mistakes;
 
-    brackets.pop();
-    brackets.pop();
+
+    brackets.clear();
+    exp_brackets.clear();
     mistakes.clear();
     exp_mistakes.clear();
-    exp_brackets.pop();
-    exp_brackets.pop();
 
 
     // №7. Корректная вложенность
-    code = {"] ( ["};
-    bracket newBracket10(code, 0, 0);
+    QStringList code_10 = {"]"};
+    bracket newBracket10(code_10, 0, 0);
 
-    brackets.push(bracket(code, 0, 2));
-    brackets.push(bracket(code, 0, 4));
+    QStringList code10 = {"( ["};
+    brackets.push(bracket(code10, 0, 0));
+    brackets.push(bracket(code10, 0, 2));
 
-    exp_brackets.push(bracket(code, 0, 2));
-
+    exp_brackets.push(bracket(code10, 0, 0));
     QTest::newRow("complexTest") << newBracket10 << brackets << mistakes << 0 << exp_brackets << exp_mistakes;
+
+    brackets.clear();
+    exp_brackets.clear();
+    mistakes.clear();
+    exp_mistakes.clear();
 }
 
 void testupdateconteinerofbrackets::add()
@@ -210,56 +216,75 @@ void testupdateconteinerofbrackets::add()
     QCOMPARE(result, countofmistakes);
 
     QCOMPARE(brackets.size(), exp_brackets.size());
+
+    int number=1;
+    QByteArray message;
     if(brackets.size()==exp_brackets.size())
     {
-        QStack<bracket>::const_iterator br = brackets.constBegin();
+        message = "Error in bracket - ";
+        QStack<bracket>::const_iterator br;
         QStack<bracket>::const_iterator e_br = exp_brackets.constBegin();
         bracket br1, br2;
-        QByteArray mes = "Error in bracket - ";
-        QByteArray messege;
-        int number=1;
-        for(br; br!=brackets.constEnd(); ++br)
+        for(br = brackets.constBegin(); br!=brackets.constEnd(); ++br)
         {
             br1 = (*br);
             br2 = (*e_br);
-            messege = (mes+QString::number(number)).toUtf8();
-            QVERIFY2(br1.getType()==br2.getType(), messege.constData());
-            QVERIFY2(br1.getSide()==br2.getSide(), messege.constData());
-            QVERIFY2(br1.getLine()==br2.getLine(), messege.constData());
-            QVERIFY2(br1.getPosition()==br2.getPosition(), messege.constData());
-            QVERIFY2(br1.getOrder()==br2.getOrder(), messege.constData());
+            message = message+(QString::number(number).toUtf8());
+            QVERIFY2(br1.getType()==br2.getType(), message.constData());
+            QVERIFY2(br1.getSide()==br2.getSide(), message.constData());
+            QVERIFY2(br1.getLine()==br2.getLine(), message.constData());
+            QVERIFY2(br1.getPosition()==br2.getPosition(), message.constData());
+            QCOMPARE(br1.getOrder(),br2.getOrder());
             ++e_br;
             number++;
         }
     }
-    QCOMPARE(mistakes.size(), exp_mistakes.size());
-    if(mistakes.size()==exp_mistakes.size())
-    {
-        QSet<mistake>::const_iterator mt = mistakes.constBegin();
-        QSet<mistake>::const_iterator e_mt = exp_mistakes.constBegin();
-        mistake mt1, mt2;
-        bracket br1, br2;
-        QString mes = "Error in mistake - ";
-        QByteArray messege;
-        int number=1;
-        for(mt; mt!=mistakes.constEnd(); ++mt)
-        {
-            mt1 = (*mt);
-            mt2 = (*e_mt);
-            messege = (mes+QString::number(number)).toUtf8();
-            QVERIFY2(mt1.getType()==mt2.getType(), messege.constData());
 
-            br1 = mt1.getBracket();
-            br2 = mt2.getBracket();
-            QVERIFY2(br1.getType()==br2.getType(), messege.constData());
-            QVERIFY2(br1.getSide()==br2.getSide(), messege.constData());
-            QVERIFY2(br1.getLine()==br2.getLine(), messege.constData());
-            QVERIFY2(br1.getPosition()==br2.getPosition(), messege.constData());
-            QVERIFY2(br1.getOrder()==br2.getOrder(), messege.constData());
-            ++e_mt;
+    // получаем избыточные
+    QSet<mistake> temp1 = mistakes;
+    temp1.subtract(exp_mistakes); // удаляет из mistakes элементы, которые есть в exp_mistakes
+
+    // получаем недостающие
+    QSet<mistake> temp2 = exp_mistakes;
+    temp2.subtract(mistakes);  // удаляет из exp_mistakes элементы, которые есть в mistakes
+
+    QString mes;
+    QTextStream stream(&mes);
+    stream << "Error in mistakes - ";
+    mistake mt;
+    bracket br;
+    if(!(temp1.isEmpty()))
+    {
+        stream << "there are excessive elements(" << temp1.size() << "): ";
+
+        QSet<mistake>::const_iterator it;
+        for (it = temp1.constBegin(); it!=temp1.constEnd(); ++it)
+        {
+            mt = *it;
+            br = mt.getBracket();
+
+            stream << "#" << number++ << ". Type: " << mt.getType() << "; Bracket: (type - " << br.getType() << ", side - " << br.getSide() << ", line - "
+                   << br.getLine() << ", position - " << br.getPosition() << ", order - " << QVariant(br.getOrder()).toString();
         }
     }
+    if(!(temp2.isEmpty()))
+    {
+        stream << "there are missing elements(" << temp2.size() << "): ";
+
+        QSet<mistake>::const_iterator it;
+        for (it = temp2.constBegin(); it!=temp2.constEnd(); ++it)
+        {
+            mt = *it;
+            br = mt.getBracket();
+
+            stream << "#" << number++ << ". Type: " << mt.getType() << "; Bracket: (type - " << br.getType() << ", side - " << br.getSide() << ", line - "
+                   << br.getLine() << ", position - " << br.getPosition() << ", order - " << QVariant(br.getOrder()).toString();
+        }
+    }
+    message += mes.toUtf8();
+    QVERIFY2(temp1.isEmpty() && temp2.isEmpty(), message.constData());
 }
+
 
 
 

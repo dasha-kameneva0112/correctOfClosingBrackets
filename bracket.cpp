@@ -11,7 +11,7 @@ bracket::bracket(BracketType currentType, BracketSide currentSide)
     correctOfOrder = true;
 }
 
-bracket::bracket (const QStringList& code, int indexOfLineWithBracket, int position)
+bracket::bracket (const QStringList& code, int indexOfLineWithBracket, int position, bool order)
 {
     // Получаем строку и символ скобки
     const QString line = code[indexOfLineWithBracket];
@@ -51,7 +51,7 @@ bracket::bracket (const QStringList& code, int indexOfLineWithBracket, int posit
 
     numberOfLine = indexOfLineWithBracket;
     positionOfBraket = position;
-    correctOfOrder = true;  // По умолчанию считаем порядок правильным
+    correctOfOrder = order;  // По умолчанию считаем порядок правильным
 
 }
 

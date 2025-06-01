@@ -20,81 +20,88 @@ void testfindnextbracket::add_data()
 
     //Создаем строки‐тесты и заполняем таблицу данными
     //№1. нахождение скобки с начала кода
-    QStringList test_code ={
+    QStringList test_code1 ={
         "int main()",
         "{",
         "int x = (5 + 3);",
-        "}" };
+        "}"
+    };
     errorininputdata error;
     errorininputdata newError;
-    QTest::newRow("findBracketInBeginOfCode") << test_code << 0 << 0 << error << 1 << 0 << 8 << newError;
+    QTest::newRow("findBracketInBeginOfCode") << test_code1 << 0 << 0 << error << 1 << 0 << 8 << newError;
 
     //№2. пропуск однострочного комментария
-    test_code = {
+    QStringList test_code2 = {
         "// comment (",
         "int main()",
         "{",
         "int x = (5 + 3);",
-        "}" };
-    QTest::newRow("skipOnelineCommentInCode") << test_code << 0 << 0 << error << 1 << 1 << 8 << newError;
+        "}"
+    };
+    QTest::newRow("skipOnelineCommentInCode") << test_code2 << 0 << 0 << error << 1 << 1 << 8 << newError;
 
     //№3. пропуск многострочного комментария (без ошибки)
-    test_code = {
-        "/\* (comment ",
-        "comment2] \*/",
+    QStringList test_code3 = {
+        "/* (comment ",
+        "comment2] */",
         "int main()",
         "{",
         "int x = (5 + 3);",
-        "}" };
-    QTest::newRow("skipMultilineCommentInCode") << test_code << 0 << 0 << error << 1 << 2 << 8 << newError;
+        "}"
+    };
+    QTest::newRow("skipMultilineCommentInCode") << test_code3 << 0 << 0 << error << 1 << 2 << 8 << newError;
 
     //№4. пропуск многострочного комментария (с ошибкой)
-    test_code = {
-        "/\* comment ",
+    QStringList test_code4 = {
+        "/* comment ",
         "int main()",
         "{",
         "int x = (5 + 3);",
-        "}" };
+        "}"
+    };
     newError.setType(UnclosedMultilineComment);
     newError.setLine(0);
     newError.setPos(1);
-    QTest::newRow("skipIncorrectMultilineCommentInCode") << test_code << 0 << 0 << error << -1 << 0 << 1 << newError;
+    QTest::newRow("skipIncorrectMultilineCommentInCode") << test_code4 << 0 << 0 << error << -1 << 0 << 1 << newError;
 
     //№5. пропуск строковой константы (без ошибки)
-    test_code = {
+    QStringList test_code5 = {
         "int main()",
         "{",
         "QString a = \"Hello, [world]]!\";",
-        "}" };
+        "}"
+    };
     newError.setType(NoError);
     newError.setLine(-1);
     newError.setPos(-1);
-    QTest::newRow("skipStringConstantInCode") << test_code << 2 << 0 << error << 1 << 3 << 0 << newError;
+    QTest::newRow("skipStringConstantInCode") << test_code5 << 2 << 0 << error << 1 << 3 << 0 << newError;
 
     //№6. пропуск строковой константы (с ошибкой)
-    test_code = {
+    QStringList test_code6 = {
         "int main()",
         "{",
         "QString a = \"Hello, [world]]! ;",
-        "}" };
+        "}"
+    };
     newError.setType(UnclosedStringConst);
     newError.setLine(2);
     newError.setPos(12);
-    QTest::newRow("skipIncorrectStringConstantInCode") << test_code << 2 << 0 << error << -1 << 2 << 12 << newError;
+    QTest::newRow("skipIncorrectStringConstantInCode") << test_code6 << 2 << 0 << error << -1 << 2 << 12 << newError;
 
     //№7. пропуск символьной коснтанты (без ошибки)
-    test_code = {
+    QStringList test_code7 = {
         "int main()",
         "{",
         "char a = \'(\';",
-        "}" };
+        "}"
+    };
     newError.setType(NoError);
     newError.setLine(-1);
     newError.setPos(-1);
-    QTest::newRow("skipCharConstantInCode") << test_code << 2 << 0 << error << 1 << 3 << 0 << newError;
+    QTest::newRow("skipCharConstantInCode") << test_code7 << 2 << 0 << error << 1 << 3 << 0 << newError;
 
     //№8. пропуск символьной константы (с ошибкой)
-    test_code={
+    QStringList test_code8 = {
         "int main()",
         "{",
         "char a = \'( ;",
@@ -103,15 +110,15 @@ void testfindnextbracket::add_data()
     newError.setType(UnclosedCharConst);
     newError.setLine(2);
     newError.setPos(9);
-    QTest::newRow("skipIncorrectCharConstantInCode") << test_code << 2 << 0 << error << -1 << 2 << 9 << newError;
+    QTest::newRow("skipIncorrectCharConstantInCode") << test_code8 << 2 << 0 << error << -1 << 2 << 9 << newError;
 
     //№9. комплексный тест - комбинация комментариев и констант
-    test_code = {
+    QStringList test_code9 = {
         "int main()",
         "{",
         "// comment",
-        "/\* comment1",
-        "comment2 \*/",
+        "/* comment1",
+        "comment2 */",
         "QString a = \"Hello, world!\";",
         "char b = \'H\';",
         "int x = (5+3);",
@@ -120,11 +127,11 @@ void testfindnextbracket::add_data()
     newError.setType(NoError);
     newError.setLine(-1);
     newError.setPos(-1);
-    QTest::newRow("complexTest") << test_code << 2 << 0 << error << 1 << 7 << 8 << newError;
+    QTest::newRow("complexTest") << test_code9 << 2 << 0 << error << 1 << 7 << 8 << newError;
 
     //№10. скобка не найдена
-    test_code = { "int x = 5 + 3;" };
-    QTest::newRow("notFoundBracket") << test_code << 0 << 0 << error << 0 << 0 << 13 << newError;
+    QStringList test_code10 = { "int x = 5 + 3;" };
+    QTest::newRow("notFoundBracket") << test_code10 << 0 << 0 << error << 0 << 0 << 13 << newError;
 }
 
 void testfindnextbracket::add()

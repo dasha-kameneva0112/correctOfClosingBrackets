@@ -15,39 +15,55 @@ void testskiponelinecomment::add_data()
     //Создаем строки‐тесты и заполняем таблицу данными 
 
     //№1. стандартный однострочный комментарий (в конце строки)
-    QStringList test_code = { "int main()", "{",
-            "int x = 5; // comment",
-            "int y = 10;", "}" };
-    QTest::newRow("standartOneLineComment") << test_code << 2 << 12 << 3 << 0;
+    QStringList test_code1 = {
+        "int main()",
+        "{",
+        "int x = 5; // comment",
+        "int y = 10;",
+        "}"
+    };
+    QTest::newRow("standartOneLineComment") << test_code1 << 2 << 12 << 3 << 0;
 
     //№2. стандартный однострочный комментарий (в 2-3 строки)
-    test_code = { "int main()", "{",
-                 "int x = 5; // comment \\",
-                 "comment2 \\",
-                 "comment3 ",
-                 "int y = 10;",
-                 "}" };
-    QTest::newRow("onelineCommentInSeveralLine") << test_code << 2 << 12 << 5 << 0;
+    QStringList test_code2 = {
+        "int main()",
+        "{",
+        "int x = 5; // comment \\",
+        "comment2 \\",
+        "comment3 ",
+        "int y = 10;",
+        "}"
+    };
+    QTest::newRow("onelineCommentInSeveralLine") << test_code2 << 2 << 12 << 5 << 0;
 
     //№3. экранированный слэш в конце комментария
-    test_code = {"int main()", "{",
-                 "int x = 5; // comment \\\\\\\\",
-                 "int y = 10;",
-                 "}"};
-    QTest::newRow("escapedSlashInEndOfOnelineComment") << test_code << 2 << 12 << 4 << 0;
+    QStringList test_code3 = {
+        "int main()",
+        "{",
+        "int x = 5; // comment \\\\\\\\",
+        "int y = 10;",
+        "}"
+    };
+    QTest::newRow("escapedSlashInEndOfOnelineComment") << test_code3 << 2 << 12 << 4 << 0;
     
     //№4. пустой комментарий
-    test_code={"int main()","{",
-                 "int x = 5; //",
-                 "int y = 10;",
-                 "}"};
-    QTest::newRow("emptyOnelineComment") << test_code << 2 << 12 << 3 << 0;
+    QStringList test_code4 = {
+        "int main()",
+        "{",
+        "int x = 5; //",
+        "int y = 10;",
+        "}"
+    };
+    QTest::newRow("emptyOnelineComment") << test_code4 << 2 << 12 << 3 << 0;
     
     //№5. комментарий в конце кода
-    test_code = {"int main()","{",
-                 "int x = 5;",
-                 "}// comment" };
-    QTest::newRow("onelineCommentInEndOfCode") << test_code << 3 << 2 << 3 << 11;
+    QStringList test_code5 = {
+        "int main()",
+        "{",
+        "int x = 5;",
+        "}// comment"
+    };
+    QTest::newRow("onelineCommentInEndOfCode") << test_code5 << 3 << 2 << 3 << 11;
 }
 
 void testskiponelinecomment::add()

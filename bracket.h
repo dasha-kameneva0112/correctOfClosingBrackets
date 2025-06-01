@@ -17,7 +17,7 @@ class bracket
 {
 public:
     bracket();
-    bracket (const QStringList& code, int indexOfLineWithBracket, int position);
+    bracket (const QStringList& code, int indexOfLineWithBracket, int position, bool order=true);
     bracket(BracketType currentType, BracketSide currentSide);
     BracketType getType() const;
     BracketSide getSide() const;

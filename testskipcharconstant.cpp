@@ -14,54 +14,58 @@ void testskipcharconstant::add_data()
 
     //Создаем строки‐тесты и заполняем таблицу данными
     //№1. простая символьная константа
-    QStringList test_code ={
+    QStringList test_code1 ={
         "int main()",
         "{",
         "char a = \'H\';",
         "}"
     };
-    QTest::newRow("simpleClosingCharConst") << test_code << 2 << 9 << true << 2 << 11;
+    QTest::newRow("simpleClosingCharConst") << test_code1 << 2 << 9 << true << 2 << 11;
 
     //№2. экранированная кавычка
-    test_code ={
+    QStringList test_code2 ={
         "int main()",
         "{",
         "char a = \'\\\'\';",
         "}"
     };
-    QTest::newRow("escapedQuotationMarkInsideCharConst") << test_code << 2 << 9 << true << 2 << 12;
+    QTest::newRow("escapedQuotationMarkInsideCharConst") << test_code2 << 2 << 9 << true << 2 << 12;
 
     //№3. незакрытая константа
-    test_code ={
+    QStringList test_code3 ={
         "int main()",
         "{",
         "char a = \'H;",
-        "}" };
-    QTest::newRow("unclosedCharConst") << test_code << 2 << 9 << false << 2 << 9;
+        "}"
+    };
+    QTest::newRow("unclosedCharConst") << test_code3 << 2 << 9 << false << 2 << 9;
 
     //№4. пустая константа
-    test_code ={
+    QStringList test_code4 ={
         "int main()",
         "{",
         "char a = \'\';",
-        "}"  };
-    QTest::newRow("emptyCharConst") << test_code << 2 << 9 << true << 2 << 10;
+        "}"
+    };
+    QTest::newRow("emptyCharConst") << test_code4 << 2 << 9 << true << 2 << 10;
 
     //№5. экранированный слэш
-    test_code ={
+    QStringList test_code5 ={
         "int main()",
         "{",
         "char a = \'\\\\\';",
-        "}" };
-    QTest::newRow("escapedSlashInsideCharConst") << test_code << 2 << 9 << true << 2 << 12;
+        "}"
+    };
+    QTest::newRow("escapedSlashInsideCharConst") << test_code5 << 2 << 9 << true << 2 << 12;
 
     //№6. неправильное экранирование слэша (ошибка)
-    test_code ={
+    QStringList test_code6 ={
         "int main()",
         "{",
         "char a = \'\\\';",
-        "}" };
-    QTest::newRow("incorrectEscapedSlashInsideCharConst") << test_code << 2 << 9 << false << 2 << 9;
+        "}"
+    };
+    QTest::newRow("incorrectEscapedSlashInsideCharConst") << test_code6 << 2 << 9 << false << 2 << 9;
 }
 
 

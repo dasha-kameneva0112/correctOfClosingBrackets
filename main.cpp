@@ -3,6 +3,8 @@
 
 int main(int argc, char *argv[])
 {
+    system("chcp 1251>nul");
+
     QTest::qExec(new testfindcoupleforbracket);
     QTest::qExec(new testupdateconteinerofbrackets);
     QTest::qExec(new testskipstringconstant);
@@ -13,10 +15,10 @@ int main(int argc, char *argv[])
     QTest::qExec(new testfindallincorrectusesofbrackets);
     QTest::qExec(new testconstructorbracket);
 
-    qDebug() << "Starting program with arguments:";
+    /* qDebug() << "Starting program with arguments:";
     for (int i = 0; i < argc; ++i) {
         qDebug() << "argv[" << i << "] =" << argv[i];
-    }
+    } */
 
     QCoreApplication a(argc, argv);
 
@@ -59,23 +61,23 @@ int main(int argc, char *argv[])
         case UnclosedMultilineComment:
             line = error.getLine();
             pos = error.getPosition();
-            qInfo() << "Во входном файле содержится код, в котором присутствует незакрытый многострочный комментарий:" << '\n';
-            qInfo() << line << ": " << code[line] << '\n';
-            qInfo() << QString(QString::number(line).length()+pos+2, ' ') << '^' << '\n';
+            qInfo() << "Во входном файле содержится код, в котором присутствует незакрытый многострочный комментарий:";
+            qInfo().noquote() << line << ": " << code[line];
+            qInfo().noquote() << QString(QString::number(line).length()+pos+3, ' ') << '^';
             break;
         case UnclosedStringConst:
             line = error.getLine();
             pos = error.getPosition();
-            qInfo() << "Во входном файле содержится код, в котором присутствует не заканчивающаяся строковая константа:" << '\n';
-            qInfo() << line << ": " << code[line] << '\n';
-            qInfo() << QString(QString::number(line).length()+pos+2, ' ') << '^' << '\n';
+            qInfo() << "Во входном файле содержится код, в котором присутствует не заканчивающаяся строковая константа:";
+            qInfo().noquote() << line << ": " << code[line];
+            qInfo().noquote() << QString(QString::number(line).length()+pos+3, ' ') << '^';
             break;
         case UnclosedCharConst:
             line = error.getLine();
             pos = error.getPosition();
-            qInfo() << "Во входном файле содержится код, в котором присутствует не заканчивающаяся символьная константа: " << '\n';
-            qInfo() << line << ": " << code[line] << '\n';
-            qInfo() << QString(QString::number(line).length()+pos+2, ' ') << '^' << '\n';
+            qInfo() << "Во входном файле содержится код, в котором присутствует не заканчивающаяся символьная константа: ";
+            qInfo().noquote() << line << ": " << code[line];
+            qInfo().noquote() << QString(QString::number(line).length()+pos+3, ' ') << '^';
             break;
         case IncorrectFileExtension:
             qInfo() << "Неверно указан файл для выходных данных. Расширение файла некорректно. " << '\n';
@@ -303,15 +305,14 @@ bool skipMultilineComment (const QStringList& code, int& currentLine, int& curre
     int startOfCommentLine=currentLine;
     int startOfCommentPosition=currentPosition; //буферы для ошибки
     QString line = code[currentLine];
+    bool end_of_code=false;
 
     //Идти по строке, пока не нашли конец комментария или пока не конец кода...
-    while(resultOfSkipping!=1 && currentPosition!=line.size()-1)
+    do
     {
-        currentPosition++; // начинаем в первый раз после *
-
         //Если встретили «*/», то…
-        if(line[currentPosition]=='/' && currentPosition != 0)
-            if(line[currentPosition-1]=='*')
+        if(line[currentPosition]=='*' && currentPosition+1 != line.size())
+            if(line[currentPosition+1]=='/')
                 resultOfSkipping=1; //Нашли конец
 
         //Если конец строки и строка не последняя, то...
@@ -319,12 +320,16 @@ bool skipMultilineComment (const QStringList& code, int& currentLine, int& curre
         {
             if(currentLine != code.size()-1)
             {
-                currentPosition=-1;
+                currentPosition=0;
                 currentLine++;
                 line = code[currentLine];
             }
-        }
-    }
+        } else
+            currentPosition++; // к следующему символу
+        if(currentLine>=code.size()-1 && currentPosition>=line.size()-1)
+            end_of_code=true;
+
+    } while (resultOfSkipping!=1 && end_of_code!=true);
 
     if(resultOfSkipping==0)
     {
@@ -556,7 +561,8 @@ int generateOutputTxtFile (const QString& filePath, const QStringList& code, QSe
         else
         {
             QTextStream out(&file); //поток для записи
-            //out.setEncoding("UTF-8"); // Установка кодировки
+            out.setEncoding(QStringConverter::System); // Установка кодировки
+            int numberOfMistake=1;
 
             //Если количество выявленных ошибок равно 0, то…
             if(mistakes.isEmpty())
@@ -584,17 +590,18 @@ int generateOutputTxtFile (const QString& filePath, const QStringList& code, QSe
                     switch (type)
                     {
                     case UnclosedBracket:
-                        out << "Найдена незакрытая скобка:" << '\n';
+                        out << QString::number(numberOfMistake) << ") Найдена незакрытая скобка:" << '\n';
                         break;
                     case ExcessiveClosingBracket:
-                        out << "Найдена избыточная закрывающая скобка:" << '\n';
+                        out << QString::number(numberOfMistake) << ") Найдена избыточная закрывающая скобка:" << '\n';
                         break;
                     case IncorrectOrderOfBrackets:
-                        out << "Найден неправильный порядок закрытия скобок:" << '\n';
+                        out << QString::number(numberOfMistake) << ") Найден неправильный порядок закрытия скобок:" << '\n';
                         break;
                     }
                     out << line << ": " << code[line] << '\n';
                     out << QString(QString::number(line).length()+pos+2, ' ') << '^' << '\n';
+                    numberOfMistake++;
                 }
             }
         }

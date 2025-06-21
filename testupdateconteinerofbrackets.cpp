@@ -6,22 +6,24 @@ testupdateconteinerofbrackets::testupdateconteinerofbrackets(QObject *parent) : 
 void testupdateconteinerofbrackets::add_data()
 {
     // колонки параметры + ожидемый результат
-    QTest::addColumn<bracket>("newBracket");
-    QTest::addColumn<QStack<bracket>>("brackets");
-    QTest::addColumn<QSet<mistake>>("mistakes");
-    QTest::addColumn<int>("countofmistakes");
-    QTest::addColumn<QStack<bracket>>("exp_brackets");
-    QTest::addColumn<QSet<mistake>>("exp_mistakes");
+    QTest::addColumn<bracket>("newBracket"); ///< Новая скобка для добавления
+    QTest::addColumn<QStack<bracket>>("brackets"); ///< Исходный стек скобок
+    QTest::addColumn<QSet<mistake>>("mistakes"); ///< Найденные ошибки
+    QTest::addColumn<int>("countofmistakes"); ///< Ожидаемое количество ошибок
+    QTest::addColumn<QStack<bracket>>("exp_brackets"); ///< Ожидаемый стек скобок
+    QTest::addColumn<QSet<mistake>>("exp_mistakes"); ///< Ожидаемые ошибки
 
     //Создаем строки‐тесты и заполняем таблицу данными
     // №1. Добавление открывающей скобки
+    /*!
+     * \test Тест 1: Добавление открывающей скобки
+     * Проверяет добавление открывающей скобки в пустой стек
+     */
     QStringList code = {"("};
     bracket newBracket1(code, 0, 0);
     QStack<bracket> brackets;
-
     QStack<bracket> exp_brackets;
     exp_brackets.push(newBracket1);
-
     QSet<mistake> mistakes;
     QSet<mistake> exp_mistakes;
     QTest::newRow("addOpeningBracket") << newBracket1 << brackets << mistakes << 0 << exp_brackets << exp_mistakes;
@@ -31,9 +33,12 @@ void testupdateconteinerofbrackets::add_data()
 
 
     // №2. Добавление закрывающей скобки (без ошибок)
+    /*!
+     * \test Тест 2: Добавление корректной закрывающей скобки
+     * Проверяет добавление в стек закрывающей скобки при наличии соответствующей открывающей
+     */
     QStringList code_2 = {")"};
     bracket newBracket2(code_2, 0, 0);
-
     QStringList code2 = {"("};
     brackets.push(bracket(code2, 0, 0));
     QTest::newRow("addCorrectCLosingBracket") << newBracket2 << brackets << mistakes << 0 << exp_brackets << exp_mistakes;
@@ -43,17 +48,18 @@ void testupdateconteinerofbrackets::add_data()
 
 
     // №3. Добавление закрывающей скобки (ошибка - нет пары, лишняя закрывающая)
+    /*!
+     * \test Тест 3: Добавление лишней закрывающей скобки
+     * Проверяет обработку закрывающей скобки без соответствующей открывающей
+     */
     QStringList code_3 = {")"};
     bracket newBracket3(code_3, 0, 0);
-
     QStringList code3 = {"{ ["};
     brackets.push(bracket(code3, 0, 0));
     brackets.push(bracket(code3, 0, 2));
-
     exp_brackets.push(bracket(code3, 0, 0));
     exp_brackets.push(bracket(code3, 0, 2));
     exp_mistakes.insert(mistake(newBracket3, ExcessiveClosingBracket));
-
     QTest::newRow("addExcessiveClosingBracket") << newBracket3 << brackets << mistakes << 1 << exp_brackets << exp_mistakes;
 
 
@@ -63,6 +69,10 @@ void testupdateconteinerofbrackets::add_data()
 
 
     // №4. Добавление закрывающей скобки в пустой контейнер (ошибка - нет пары, лишняя закрывающая)
+    /*!
+     * \test Тест 4: Закрывающая скобка в пустом контейнере
+     * Проверяет обработку закрывающей скобки в пустом стеке
+     */
     QStringList code4 = {")"};
     bracket newBracket4(code4, 0, 0);
     exp_mistakes.insert(mistake(bracket(code4,0,0), ExcessiveClosingBracket));
@@ -73,13 +83,15 @@ void testupdateconteinerofbrackets::add_data()
 
 
     // №5.1. Неправильный порядок с предыдущей (одной)
+    /*!
+     * \test Тест 5: Неправильный порядок скобок (простой случай)
+     * Проверяет обработку закрывающей скобки при неправильном порядке
+     */
     QStringList code_5 = {")"};
     bracket newBracket5(code_5, 0, 0);
-
     QStringList code5 = {"( ["};
     brackets.push(bracket(code5, 0, 0));
     brackets.push(bracket(code5, 0, 2));
-
     bracket currentBr(bracket(code5, 0, 2, false));
     exp_brackets.push(currentBr);
     QTest::newRow("incorrectOrderWithOneBracket") << newBracket5 << brackets << mistakes << 0 << exp_brackets << exp_mistakes;
@@ -90,15 +102,17 @@ void testupdateconteinerofbrackets::add_data()
 
 
     // №5.2. Неправильный порядок с 3-4 всеми предыдущими
+    /*!
+     * \test Тест 6: Неправильный порядок скобок (комплексный случай)
+     * Проверяет обработку закрывающей скобки при множественном неправильном порядке
+     */
     QStringList code_6 = {")"};
     bracket newBracket6(code_6, 0, 0);
-
     QStringList code6 = {"( [ [ {"};
     brackets.push(bracket(code6, 0, 0));
     brackets.push(bracket(code6, 0, 2));
     brackets.push(bracket(code6, 0, 4));
     brackets.push(bracket(code6, 0, 6));
-
     bracket currentBr1(bracket(code6, 0, 2, false));
     exp_brackets.push(currentBr1);
     bracket currentBr2(bracket(code6, 0, 4, false));
@@ -113,9 +127,12 @@ void testupdateconteinerofbrackets::add_data()
 
 
     // №5.3. Неправильный порядок с 3-4 предыдущими (не всеми)
+    /*!
+     * \test Тест 7: Частичный неправильный порядок скобок
+     * Проверяет обработку закрывающей скобки при частичном неправильном порядке
+     */
     QStringList code_7 = {")"};
     bracket newBracket7(code_7, 0, 0);
-
     QStringList code7 = {"[ { ( [ [ {"};
     brackets.push(bracket(code7, 0, 0));
     brackets.push(bracket(code7, 0, 2));
@@ -123,7 +140,6 @@ void testupdateconteinerofbrackets::add_data()
     brackets.push(bracket(code7, 0, 6));
     brackets.push(bracket(code7, 0, 8));
     brackets.push(bracket(code7, 0, 10));
-
     bracket currentBr4(bracket(code7, 0, 0));
     exp_brackets.push(currentBr4);
     bracket currentBr5(bracket(code7, 0, 2));
@@ -142,13 +158,15 @@ void testupdateconteinerofbrackets::add_data()
 
 
     // №5.4. Добавление ошибки неправильного порядка (порядок уже изменен)
+    /*!
+     * \test Тест 8: Ошибка неправильного порядка (уже измененный порядок)
+     * Проверяет добавление ошибки неправильного порядка скобок
+     */
     QStringList code_8 = {"]"};
     bracket newBracket8(code_8, 0, 0);
-
     QStringList code8 = {"["};
     bracket current_bracket(code8, 0, 0, false);
     brackets.push(current_bracket);
-
     exp_mistakes.insert(mistake(newBracket8, IncorrectOrderOfBrackets));
     QTest::newRow("addMistakeIncorrectOrder") << newBracket8 << brackets << mistakes << 1 << exp_brackets << exp_mistakes;
 
@@ -158,20 +176,20 @@ void testupdateconteinerofbrackets::add_data()
 
 
     // №6. Добавление ошибки в непустой контейнер
+    /*!
+     * \test Тест 9: Добавление ошибки в непустой контейнер
+     * Проверяет добавление новой ошибки при наличии существующих
+     */
     QStringList code_9 = {"]"};
     bracket newBracket9(code_9, 0, 0);
-
     QStringList code9 = {"{ { )"};
     brackets.push(bracket(code9, 0, 0));
     brackets.push(bracket(code9, 0, 2));
-
     bracket current_bracket1(code9, 0, 4);
     mistake current_mistake(current_bracket1, ExcessiveClosingBracket);
     mistakes.insert(current_mistake);
-
     exp_brackets.push(bracket(code9, 0, 0));
     exp_brackets.push(bracket(code9, 0, 2));
-
     exp_mistakes.insert(current_mistake);
     exp_mistakes.insert(mistake(newBracket9, ExcessiveClosingBracket));
     QTest::newRow("addMistakeInNotEmptyConteiner") << newBracket9 << brackets << mistakes << 1 << exp_brackets << exp_mistakes;
@@ -184,13 +202,15 @@ void testupdateconteinerofbrackets::add_data()
 
 
     // №7. Корректная вложенность
+    /*!
+     * \test Тест 10: Корректная вложенность скобок
+     * Проверяет обработку сложного случая вложенных скобок
+     */
     QStringList code_10 = {"]"};
     bracket newBracket10(code_10, 0, 0);
-
     QStringList code10 = {"( ["};
     brackets.push(bracket(code10, 0, 0));
     brackets.push(bracket(code10, 0, 2));
-
     exp_brackets.push(bracket(code10, 0, 0));
     QTest::newRow("complexTest") << newBracket10 << brackets << mistakes << 0 << exp_brackets << exp_mistakes;
 

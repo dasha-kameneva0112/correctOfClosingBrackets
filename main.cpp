@@ -4,16 +4,20 @@
 int main(int argc, char *argv[])
 {
     system("chcp 1251>nul");
-
-    QTest::qExec(new testfindcoupleforbracket);
-    QTest::qExec(new testupdateconteinerofbrackets);
-    QTest::qExec(new testskipstringconstant);
-    QTest::qExec(new testskipcharconstant);
-    QTest::qExec(new testskipmultilinecomment);
-    QTest::qExec(new testskiponelinecomment);
-    QTest::qExec(new testfindnextbracket);
-    QTest::qExec(new testfindallincorrectusesofbrackets);
-    QTest::qExec(new testconstructorbracket);
+    QString first_arg = argv[1];
+    if (first_arg == "-test") // Если первый аргумент является флагом тестирования
+    {
+        QTest::qExec(new testfindcoupleforbracket);
+        QTest::qExec(new testupdateconteinerofbrackets);
+        QTest::qExec(new testskipstringconstant);
+        QTest::qExec(new testskipcharconstant);
+        QTest::qExec(new testskipmultilinecomment);
+        QTest::qExec(new testskiponelinecomment);
+        QTest::qExec(new testfindnextbracket);
+        QTest::qExec(new testfindallincorrectusesofbrackets);
+        QTest::qExec(new testconstructorbracket);
+        return 0; // Завершить работу програмы
+    }
 
     /* qDebug() << "Starting program with arguments:";
     for (int i = 0; i < argc; ++i) {
@@ -99,7 +103,7 @@ int readCppFile (const QString& filePath, QStringList& code, errorininputdata& e
     if(fileInf.suffix() != "cpp" && fileInf.suffix() != "h" && fileInf.suffix() != "txt") //если расширение неправильное
     {
         errorFound = 1;
-        error.addError(IncorrectFileExtension);
+        error.setType(IncorrectFileExtension);
     }
 
     if(errorFound==0)
@@ -110,7 +114,7 @@ int readCppFile (const QString& filePath, QStringList& code, errorininputdata& e
         if(!file.open(QIODevice::ReadOnly))
         {
             errorFound = 1;
-            error.addError(NoAccessToInputFile);
+            error.setType(NoAccessToInputFile);
         }
         else
         {
@@ -123,12 +127,12 @@ int readCppFile (const QString& filePath, QStringList& code, errorininputdata& e
             if(code.size()>10000)
             {
                 errorFound = 1;
-                error.addError(ExceedingMaxLengthInputFile);
+                error.setType(ExceedingMaxLengthInputFile);
             }
             if(code.isEmpty())
             {
                 errorFound = 1;
-                error.addError(EmptyInputFile);
+                error.setType(EmptyInputFile);
             }
         }
     }
@@ -500,6 +504,7 @@ int updateContainerOfBrackets (bracket& newBracket, QStack <bracket>& brackets, 
     return countOfMistakes;
 }
 
+
 int findCoupleForBracket(const bracket& newBracket, const QStack<bracket>& brackets)
 {
     BracketType necessaryType = newBracket.getType(); //определили нужный тип
@@ -545,7 +550,7 @@ int generateOutputTxtFile (const QString& filePath, const QStringList& code, QSe
     {
         //Создать новый объект ошибки, передав тип ошибки – IncorrectFileExtension
         errorFound = 1;
-        error.addError(IncorrectFileExtension);
+        error.setType(IncorrectFileExtension);
     }
     else
     {
@@ -556,7 +561,7 @@ int generateOutputTxtFile (const QString& filePath, const QStringList& code, QSe
         {
             //Создать новый объект ошибки, передав тип ошибки – NoAccessToOutputFile
             errorFound = 1;
-            error.addError(NoAccessToOutputFile);
+            error.setType(NoAccessToOutputFile);
         }
         else
         {

@@ -6,15 +6,19 @@ testfindallincorrectusesofbrackets::testfindallincorrectusesofbrackets(QObject *
 void testfindallincorrectusesofbrackets::add_data()
 {
     // колонки параметры + ожидемый результат
-    QTest::addColumn<QStringList>("code");
-    QTest::addColumn<QSet<mistake>>("mistakes");
-    QTest::addColumn<errorininputdata>("error");
-    QTest::addColumn<int>("countofmistakes");
-    QTest::addColumn<QSet<mistake>>("exp_mistakes");
-    QTest::addColumn<errorininputdata>("exp_error");
+    QTest::addColumn<QStringList>("code"); ///< Исходный код для теста
+    QTest::addColumn<QSet<mistake>>("mistakes"); ///< Найденные ошибки
+    QTest::addColumn<errorininputdata>("error"); ///< Ошибки во входных данных
+    QTest::addColumn<int>("countofmistakes"); ///< Ожидаемое количество ошибок
+    QTest::addColumn<QSet<mistake>>("exp_mistakes"); ///< Ожидаемые ошибки
+    QTest::addColumn<errorininputdata>("exp_error"); ///< Ожидаемые ошибки входных данных
 
     //Создаем строки‐тесты и заполняем таблицу данными
     //№1. нахождение скобок в обычном корректном коде
+    /*!
+     * \test Тест 1: Корректный код
+     * Проверяет отсутствие ошибок в правильном коде
+     */
     QStringList code1 = {
         "int main()",
         "{",
@@ -28,6 +32,10 @@ void testfindallincorrectusesofbrackets::add_data()
     QTest::newRow("findBracketInCorrectCode") << code1 << mistakes << error << 0 << exp_mistakes << newError;
 
     //№2. код с комментариями и константами, содержащие скобки (комплексный тест1)
+    /*!
+     * \test Тест 2: Код с комментариями и константами
+     * Проверяет игнорирование скобок в комментариях и константах
+     */
     QStringList code2 = {
         "int main()",
         "{",
@@ -39,6 +47,10 @@ void testfindallincorrectusesofbrackets::add_data()
     QTest::newRow("codeWithSkippingConstantsAndCommentsWithBrackets") << code2 << mistakes << error << 0 << exp_mistakes << newError;
 
     //№3. ошибка - лишняя закрывающая скобка
+    /*!
+     * \test Тест 3: Лишняя закрывающая скобка
+     * Проверяет обнаружение избыточной закрывающей скобки
+     */
     QStringList code3 = {
         "int main()",
         "{",
@@ -54,6 +66,10 @@ void testfindallincorrectusesofbrackets::add_data()
     exp_mistakes.clear();
 
     //№4. ошибка - незакрытая скобка
+    /*!
+     * \test Тест 4: Незакрытая скобка
+     * Проверяет обнаружение незакрытой скобки
+     */
     QStringList code4 = {
         "int main()",
         "{",
@@ -67,6 +83,10 @@ void testfindallincorrectusesofbrackets::add_data()
     exp_mistakes.clear();
 
     //№5. ошибка - неправильный порядок
+    /*!
+     * \test Тест 5: Неправильный порядок скобок
+     * Проверяет обнаружение некорректной последовательности скобок
+     */
     QStringList code5 = {
         "int main()",
         "{",
@@ -79,7 +99,11 @@ void testfindallincorrectusesofbrackets::add_data()
     mistakes.clear();
     exp_mistakes.clear();
 
-    //№6. комплексный тест2 - комбинация всех ошибок
+    //№6. комплексный тест - комбинация всех ошибок
+    /*!
+     * \test Тест 6: Комбинация всех ошибок
+     * Проверяет обнаружение нескольких типов ошибок
+     */
     QStringList code6 = {
         "int main()",
         "{",
@@ -92,14 +116,17 @@ void testfindallincorrectusesofbrackets::add_data()
     exp_mistakes.insert(mistake(current_bracket3, ExcessiveClosingBracket));
     exp_mistakes.insert(mistake(current_bracket4, UnclosedBracket));
     exp_mistakes.insert(mistake(current_bracket5, IncorrectOrderOfBrackets));
-
     QTest::newRow("allMistakes") << code6 << mistakes << error << 3 << exp_mistakes << newError;
 
     mistakes.clear();
     exp_mistakes.clear();
 
 
-    //№7. комплексный тест3 - несколько одинаковых ошибок
+    //№7. комплексный тест - несколько одинаковых ошибок
+    /*!
+     * \test Тест 7: Несколько одинаковых ошибок
+     * Проверяет обнаружение нескольких ошибок одного типа
+     */
     QStringList code7 = {
         "int main()",
         "{",
@@ -111,13 +138,16 @@ void testfindallincorrectusesofbrackets::add_data()
     bracket current_bracket8(code7, 4, 0);
     exp_mistakes.insert(mistake(current_bracket6, ExcessiveClosingBracket));
     exp_mistakes.insert(mistake(current_bracket8, ExcessiveClosingBracket));
-
     QTest::newRow("severalSameMistakes") << code7 << mistakes << error << 2 << exp_mistakes << newError;
 
     mistakes.clear();
     exp_mistakes.clear();
 
     //№8. ошибка - незакрытая строковая константа
+    /*!
+     * \test Тест 8: Незакрытая строковая константа
+     * Проверяет обнаружение незакрытой строковой константы
+     */
     QStringList code8 = {
         "int main()",
         "{",
@@ -131,6 +161,10 @@ void testfindallincorrectusesofbrackets::add_data()
 
 
     //№9. ошибка - незакрытая символьная константа
+    /*!
+     * \test Тест 9: Незакрытая символьная константа
+     * Проверяет обнаружение незакрытой символьной константы
+     */
     QStringList code9 = {
         "int main()",
         "{",
@@ -142,6 +176,10 @@ void testfindallincorrectusesofbrackets::add_data()
     QTest::newRow("errorIsUnclosedCharConst") << code9 << mistakes << error << 0 << exp_mistakes << newError;
 
     //№10. ошибка - незакрытый многострочный комментарий
+    /*!
+     * \test Тест 10: Незакрытый многострочный комментарий
+     * Проверяет обнаружение незакрытого многострочного комментария
+     */
     QStringList code10 = {
         "int main()",
         "{",

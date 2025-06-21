@@ -21,10 +21,6 @@ void errorininputdata::updateError(ErrorsInInputDataType currentType, int indexO
     positionOfError=position;
 }
 
-void errorininputdata::addError(ErrorsInInputDataType currentType)
-{    type=currentType; }
-
-
 ErrorsInInputDataType errorininputdata::getType() const
 {    return this->type; }
 

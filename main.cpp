@@ -5,7 +5,8 @@ int main(int argc, char *argv[])
 {
     system("chcp 1251>nul");
     QString first_arg = argv[1];
-    if (first_arg == "-test") // Если первый аргумент является флагом тестирования
+    // Если первый аргумент является флагом тестирования
+    if (first_arg == "-test")
     {
         QTest::qExec(new testfindcoupleforbracket);
         QTest::qExec(new testupdateconteinerofbrackets);
@@ -16,7 +17,8 @@ int main(int argc, char *argv[])
         QTest::qExec(new testfindnextbracket);
         QTest::qExec(new testfindallincorrectusesofbrackets);
         QTest::qExec(new testconstructorbracket);
-        return 0; // Завершить работу програмы
+        // Завершить работу програмы
+        return 0;
     }
 
     /* qDebug() << "Starting program with arguments:";
@@ -30,7 +32,8 @@ int main(int argc, char *argv[])
     QString inputFilePath = argv[1];
     QString outputFilePath = argv[2];
 
-    errorininputdata error;  // пустой объект для ошибки с входными данными
+    // пустой объект для ошибки с входными данными
+    errorininputdata error;
     QSet<mistake> mistakes;
     QStringList code;
     int countOfMistakes;
@@ -110,6 +113,7 @@ int readCppFile (const QString& filePath, QStringList& code, errorininputdata& e
     {
         //Открыть указанный входной файл
         QFile file(filePath);
+
         //Если не удалось успешно открыть входной файл, то...
         if(!file.open(QIODevice::ReadOnly))
         {
@@ -329,7 +333,8 @@ bool skipMultilineComment (const QStringList& code, int& currentLine, int& curre
                 line = code[currentLine];
             }
         } else
-            currentPosition++; // к следующему символу
+            // к следующему символу
+            currentPosition++;
         if(currentLine>=code.size()-1 && currentPosition>=line.size()-1)
             end_of_code=true;
 
@@ -356,7 +361,8 @@ bool skipCharConstant (const QStringList& code, int& currentLine, int& currentPo
     //Идти посимвольно по строке, пока не нашли конец константы или пока не конец строки...
     while(resultOfSkipping!=1 && currentPosition < line.size()-1)
     {
-        currentPosition++; // начинаем в первый раз после открывающей кавычки
+        // начинаем в первый раз после открывающей кавычки
+        currentPosition++;
 
         //Если встретили `\`, то...
         if(line[currentPosition]=='\\')
@@ -370,9 +376,12 @@ bool skipCharConstant (const QStringList& code, int& currentLine, int& currentPo
         //Если встретили ` ‘ `, то...
         if(line[currentPosition]=='\'')
         {
-            if(slashesFlag==0)  //Если слэш не был найден, то...
-                resultOfSkipping=1;  //Нашли конец константы
-            else  //Иначе oбнулить флаг нахождения слэша
+            //Если слэш не был найден, то...
+            if(slashesFlag==0)
+                //Нашли конец константы
+                resultOfSkipping=1;
+            else
+                //Иначе oбнулить флаг нахождения слэша
                 slashesFlag=0;
         }
     }
@@ -389,15 +398,17 @@ bool skipCharConstant (const QStringList& code, int& currentLine, int& currentPo
 bool skipStringConstant (const QStringList& code, int& currentLine, int& currentPosition)
 {
     int resultOfSkipping=0; // 1 - успешно
+    //буферы для ошибки
     int startOfCommentLine=currentLine;
-    int startOfCommentPosition=currentPosition; //буферы для ошибки
+    int startOfCommentPosition=currentPosition;
     QString line = code[currentLine];
     int slashesCount=0;
 
     // Идти посимвольно по строке, пока не нашли конец константы или пока не конец строки...
     while(resultOfSkipping!=1 && currentPosition < line.size()-1)
     {
-        currentPosition++; // начинаем после открывающей кавычки
+        // начинаем после открывающей кавычки
+        currentPosition++;
 
         //Если встретили не `\` и не ` " `, то...
         if(line[currentPosition]!='\\' && line[currentPosition]!='"')
@@ -412,7 +423,8 @@ bool skipStringConstant (const QStringList& code, int& currentLine, int& current
         {
             //Если количество слэшев четное, то…
             if(slashesCount%2==0)
-                resultOfSkipping = 1; //Константа пропущена
+                //Константа пропущена
+                resultOfSkipping = 1;
             //Иначе константа не пропущена
         }
 
@@ -455,19 +467,23 @@ int updateContainerOfBrackets (bracket& newBracket, QStack <bracket>& brackets, 
 
     //Если найденная скобка – открывающая, то…
     if(newBracket.getSide() == Opening)
-        brackets.push(newBracket);    //Добавить объект в контейнер
+        //Добавить объект в контейнер
+        brackets.push(newBracket);
+
     if(newBracket.getSide() == Closing)
     {
         //Найти в стеке парную открывающую скобку для текущей
         indexOfCouple = findCoupleForBracket(newBracket, brackets);
 
-        if(indexOfCouple!=-1)   //Если пара найдена, то...
+        //Если пара найдена, то...
+        if(indexOfCouple!=-1)
         {
             //Проверить порядок скобки и последней из стека (последняя – того же типа, открывающая)
             lastBracket = brackets.top();
             if(lastBracket.getType()==newBracket.getType() && lastBracket.getSide()==Opening)
                 order = true;
-            if(order == false) //Если порядок неверный, то...
+            //Если порядок неверный, то...
+            if(order == false)
             {
                 //Изменить поле correctOfOrder у всех скобок до парной
                 index=brackets.size()-1;
@@ -481,7 +497,8 @@ int updateContainerOfBrackets (bracket& newBracket, QStack <bracket>& brackets, 
             --it;
             coupleBracket = *it;
 
-            if(coupleBracket.getOrder() == false) //Если у парной порядок неверный, то...
+            //Если у парной порядок неверный, то...
+            if(coupleBracket.getOrder() == false)
             {
                 //Создать новую ошибку (тип – IncorrectOrderOfBrackets)
                 mistake newMistake(newBracket, IncorrectOrderOfBrackets);
@@ -510,9 +527,6 @@ int findCoupleForBracket(const bracket& newBracket, const QStack<bracket>& brack
     BracketType necessaryType = newBracket.getType(); //определили нужный тип
     int index=brackets.size();
     int result=0;
-    //QList<bracket> bracketList = brackets.toList(); //из стека в лист
-    //QList<bracket>::iterator i;
-    //for(i=bracketList.end()-1; i!=brackets.begin() || result!=1; --i)
 
     //Найти в brackets, начиная с конца, открывающую скобку нужного типа
     QStack<bracket>::const_iterator it=brackets.constEnd();
@@ -565,8 +579,10 @@ int generateOutputTxtFile (const QString& filePath, const QStringList& code, QSe
         }
         else
         {
-            QTextStream out(&file); //поток для записи
-            out.setEncoding(QStringConverter::System); // Установка кодировки
+            //поток для записи
+            QTextStream out(&file);
+            // Установка кодировки
+            out.setEncoding(QStringConverter::System);
             int numberOfMistake=1;
 
             //Если количество выявленных ошибок равно 0, то…
